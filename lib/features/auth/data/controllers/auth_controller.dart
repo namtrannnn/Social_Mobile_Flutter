@@ -1,0 +1,91 @@
+import 'package:flutter/material.dart';
+import '../models/user_model.dart';
+import '../repositories/auth_repository.dart';
+import '../../../../core/services/socket_service.dart';
+
+class AuthController extends ChangeNotifier {
+  final AuthRepository repository;
+  final SocketService socketService;
+
+  AuthController(this.repository, this.socketService);
+
+  bool isLoading = false;
+  String? errorMessage;
+  UserModel? currentUser;
+  String? tokenUser;
+
+  Future<bool> login({required String email, required String password}) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      final response = await repository.login(
+        email: email.trim(),
+        password: password.trim(),
+      );
+
+      if (response.isSuccess) {
+        currentUser = response.user;
+        tokenUser = response.tokenUser;
+
+        if (tokenUser != null && tokenUser!.isNotEmpty) {
+          socketService.connect(
+            baseUrl: 'http://172.8.145.53:5000',
+            token: tokenUser!,
+          );
+        }
+
+        return true;
+      } else {
+        errorMessage = response.message;
+        return false;
+      }
+    } catch (e) {
+      errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> register({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      final response = await repository.register(
+        fullName: fullName.trim(),
+        email: email.trim(),
+        password: password.trim(),
+      );
+
+      if (response.isSuccess) {
+        return true;
+      } else {
+        errorMessage = response.message;
+        return false;
+      }
+    } catch (e) {
+      errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void logout() {
+    socketService.disconnect();
+    currentUser = null;
+    tokenUser = null;
+    errorMessage = null;
+    notifyListeners();
+  }
+}
