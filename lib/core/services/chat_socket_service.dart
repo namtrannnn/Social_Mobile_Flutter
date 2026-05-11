@@ -13,7 +13,7 @@ class ChatSocketService {
     _socket = IO.io(
       baseUrl,
       IO.OptionBuilder()
-          .setTransports(['websocket'])
+          .setTransports(['polling', 'websocket'])
           .disableAutoConnect()
           .setAuth({'tokenUser': tokenUser})
           .setPath('/socket.io')

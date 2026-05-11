@@ -4,4 +4,5 @@ class RouteNames {
   static const register = '/register';
   static const profile = '/profile';
   static const chat = '/chat';
+  static const createPost = '/create-post';
 }

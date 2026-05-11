@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:dio/dio.dart';
 
 import '../features/auth/data/controllers/auth_controller.dart';
 import '../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -17,7 +16,7 @@ import 'routes/route_names.dart';
 import 'routes/app_routes.dart';
 import '../core/services/socket_service.dart';
 import '../core/services/chat_socket_service.dart';
-import '../core/services/local_storage_service.dart';
+import '../core/storage/secure_storage_service.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -60,22 +59,26 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _checkLogin() async {
-    final token = await LocalStorageService.getToken();
+    final token = await SecureStorageService.getValidToken();
 
     if (token != null && token.isNotEmpty) {
-      _socketService.connect(
-        // baseUrl: 'http://192.168.100.174:5000',
-        baseUrl: 'http://172.8.194.162:5000',
+      // _socketService.connect(
+      //   baseUrl: 'http://172.8.145.53:5000',
 
-        token: token,
-      );
+      //   // baseUrl: 'http://192.168.100.174:5000',
 
-      _chatSocketService.connect(
-        // baseUrl: 'http://192.168.100.174:5000',
-        baseUrl: 'http://172.8.194.162:5000',
+      //   // baseUrl: 'http://172.8.194.162:5000',
+      //   token: token,
+      // );
 
-        tokenUser: token,
-      );
+      // _chatSocketService.connect(
+      //   baseUrl: 'http://172.8.145.53:5000',
+
+      //   // baseUrl: 'http://192.168.100.174:5000',
+
+      //   // baseUrl: 'http://172.8.194.162:5000',
+      //   tokenUser: token,
+      // );
     }
 
     if (!mounted) return;

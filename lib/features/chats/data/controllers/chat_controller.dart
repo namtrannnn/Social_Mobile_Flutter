@@ -38,7 +38,7 @@ class ChatController extends ChangeNotifier {
   ChatUser? currentUser;
 
   void initSocket({required String baseUrl, required String tokenUser}) {
-    socketService.connect(baseUrl: baseUrl, tokenUser: tokenUser);
+    // socketService.connect(baseUrl: baseUrl, tokenUser: tokenUser);
     socketService.onServerReturnMessage((data) {
       final msg = ChatMessage.fromJson(Map<String, dynamic>.from(data));
       _changeAllMessages(msg);
