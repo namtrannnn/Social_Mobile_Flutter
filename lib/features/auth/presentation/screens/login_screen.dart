@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../data/controllers/auth_controller.dart';
 import '../../../../app/routes/route_names.dart';
-import '../../../../core/services/local_storage_service.dart';
+import '../../../../core/storage/local_storage_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -58,14 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await LocalStorageService.saveRememberLogin(
         rememberMe: rememberMe,
         email: emailController.text.trim(),
-        password: passwordController.text.trim(),
       );
-
-      // Nếu backend trả token thì lưu token ở đây
-      if (authController.tokenUser != null &&
-          authController.tokenUser!.isNotEmpty) {
-        await LocalStorageService.saveToken(authController.tokenUser!);
-      }
 
       ScaffoldMessenger.of(
         context,

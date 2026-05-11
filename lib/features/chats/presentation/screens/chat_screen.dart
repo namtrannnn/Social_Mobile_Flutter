@@ -28,30 +28,24 @@ class _ChatScreenState extends State<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final chat = context.read<ChatController>();
 
-      // Không có currentUser thật thì không init chat
-      if (chat.currentUser == null || chat.currentUser!.id.trim().isEmpty) {
-        chat.currentRoomData = null;
-        chat.roomList = [];
-        chat.sourceRoomList = [];
-        chat.allMessenger = [];
-        chat.isNewMessage = false;
-        chat.isGroup = false;
-        chat.receiveUser = null;
-        chat.notifyListeners();
-        return;
-      }
+      print('=== CHAT SCREEN START ===');
+      print('currentUser before = ${chat.currentUser}');
+
+      // ❌ BỎ check này đi
+      // if (chat.currentUser == null ...) return;
+
+      // 👉 fake test user tạm (debug)
+      chat.currentUser ??= ChatUser(
+        id: "TEST_ID",
+        fullName: "Test User",
+        avatar: null,
+      );
+
+      print('>>> BEFORE initData');
 
       await chat.initData(me: chat.currentUser!);
 
-      if (!mounted) return;
-
-      final isDesktop = MediaQuery.of(context).size.width >= 900;
-      if (!isDesktop && !_didInitMobileState) {
-        _didInitMobileState = true;
-        chat.currentRoomData = null;
-        chat.isNewMessage = false;
-        chat.notifyListeners();
-      }
+      print('>>> AFTER initData');
     });
   }
 

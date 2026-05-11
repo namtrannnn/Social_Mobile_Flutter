@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/friend_user_model.dart';
 import '../../../../app/config/api_config.dart';
-import '../../../../core/services/local_storage_service.dart';
+import '../../../../core/storage/secure_storage_service.dart';
 
 class FriendRemoteDataSource {
   Future<Map<String, String>> _headers() async {
-    final token = await LocalStorageService.getToken();
+    final token = await SecureStorageService.getToken();
     return {
       'Content-Type': 'application/json',
       if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',

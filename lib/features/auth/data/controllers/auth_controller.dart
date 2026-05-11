@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../repositories/auth_repository.dart';
 import '../../../../core/services/socket_service.dart';
+import '../../../../core/storage/secure_storage_service.dart';
 
 class AuthController extends ChangeNotifier {
   final AuthRepository repository;
   final SocketService socketService;
-
   AuthController(this.repository, this.socketService);
 
   bool isLoading = false;
   String? errorMessage;
   UserModel? currentUser;
   String? tokenUser;
+  bool isCheckingAuth = true;
+  bool isLoggedIn = false;
 
   Future<bool> login({required String email, required String password}) async {
     try {
@@ -28,13 +30,20 @@ class AuthController extends ChangeNotifier {
       if (response.isSuccess) {
         currentUser = response.user;
         tokenUser = response.tokenUser;
-
+        isLoggedIn = true;
+        // SAVE TOKEN
         if (tokenUser != null && tokenUser!.isNotEmpty) {
-          socketService.connect(
-            baseUrl: 'http://172.8.145.53:5000',
-            token: tokenUser!,
-          );
+          await SecureStorageService.saveToken(tokenUser!);
         }
+        final expiredAt = DateTime.now().add(const Duration(days: 3));
+
+        await SecureStorageService.saveExpiredAt(expiredAt.toIso8601String());
+        // if (tokenUser != null && tokenUser!.isNotEmpty) {
+        //   socketService.connect(
+        //     baseUrl: 'http://172.8.145.53:5000',
+        //     token: tokenUser!,
+        //   );
+        // }
 
         return true;
       } else {
@@ -81,11 +90,35 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  void logout() {
+  Future<void> checkAuthStatus() async {
+    isCheckingAuth = true;
+    notifyListeners();
+
+    final token = await SecureStorageService.getValidToken();
+
+    if (token != null) {
+      tokenUser = token;
+      isLoggedIn = true;
+    } else {
+      tokenUser = null;
+      currentUser = null;
+      isLoggedIn = false;
+    }
+
+    isCheckingAuth = false;
+    notifyListeners();
+  }
+
+  Future<void> logout() async {
     socketService.disconnect();
+
+    await SecureStorageService.clearAuth();
+
     currentUser = null;
     tokenUser = null;
     errorMessage = null;
+    isLoggedIn = false;
+
     notifyListeners();
   }
 }
