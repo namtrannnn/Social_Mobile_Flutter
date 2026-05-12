@@ -165,4 +165,38 @@ class PostController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> toggleLike({
+    required String token,
+    required String postId,
+  }) async {
+    final index = posts.indexWhere((post) => post.id == postId);
+
+    if (index == -1) return;
+
+    final oldPost = posts[index];
+
+    final newIsLiked = !oldPost.isLiked;
+
+    final newLikesCount = newIsLiked
+        ? oldPost.likesCount + 1
+        : oldPost.likesCount > 0
+        ? oldPost.likesCount - 1
+        : 0;
+
+    posts[index] = oldPost.copyWith(
+      isLiked: newIsLiked,
+      likesCount: newLikesCount,
+    );
+
+    notifyListeners();
+
+    try {
+      await postRemoteDataSource.toggleLike(token: token, postId: postId);
+    } catch (e) {
+      posts[index] = oldPost;
+      error = e.toString();
+      notifyListeners();
+    }
+  }
 }

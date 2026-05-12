@@ -6,6 +6,15 @@ class SecureStorageService {
   static const String tokenKey = 'tokenUser';
 
   static const String expiredAtKey = 'expiredAt';
+  static const String userIdKey = 'userId';
+
+  static Future<void> saveUserId(String userId) async {
+    await _storage.write(key: userIdKey, value: userId);
+  }
+
+  static Future<String?> getUserId() async {
+    return await _storage.read(key: userIdKey);
+  }
 
   // SAVE TOKEN
   static Future<void> saveToken(String token) async {
@@ -32,6 +41,7 @@ class SecureStorageService {
     await _storage.delete(key: tokenKey);
 
     await _storage.delete(key: expiredAtKey);
+    await _storage.delete(key: userIdKey);
   }
 
   // CLEAR ALL

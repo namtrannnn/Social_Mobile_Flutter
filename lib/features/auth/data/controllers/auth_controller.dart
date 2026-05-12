@@ -38,6 +38,9 @@ class AuthController extends ChangeNotifier {
         final expiredAt = DateTime.now().add(const Duration(days: 3));
 
         await SecureStorageService.saveExpiredAt(expiredAt.toIso8601String());
+        if (currentUser?.id != null && currentUser!.id.isNotEmpty) {
+          await SecureStorageService.saveUserId(currentUser!.id);
+        }
         // if (tokenUser != null && tokenUser!.isNotEmpty) {
         //   socketService.connect(
         //     baseUrl: 'http://172.8.145.53:5000',

@@ -10,11 +10,11 @@ class ApiConfig {
     }
 
     // Android emulator
-    return 'http://172.8.83.92:5000/api/v1';
+    // return 'http://172.8.83.92:5000/api/v1';
     // return 'http://172.8.145.53:5000/api/v1';
     // return 'http://192.168.100.174:5000/api/v1';
     // return 'http://172.8.194.162:5000/api/v1';
-    // return 'http://192.168.100.174:5000/api/v1'; // (home)
-    // return 'http://192.168.110.137:5000/api/v1'; //(trung nguyen)
+    return 'http://192.168.100.174:5000/api/v1'; // (home)
+    return 'http://192.168.110.130:5000/api/v1'; //(trung nguyen)
   }
 }

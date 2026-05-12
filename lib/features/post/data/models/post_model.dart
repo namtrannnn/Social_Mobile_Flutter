@@ -61,6 +61,43 @@ class PostModel {
           : null,
     );
   }
+  PostModel copyWith({
+    String? id,
+    String? authorId,
+    String? authorName,
+    String? authorAvatar,
+    String? caption,
+    List<PostMediaModel>? media,
+    String? location,
+    List<String>? hashtags,
+    int? likesCount,
+    int? commentsCount,
+    int? savesCount,
+    int? sharesCount,
+    bool? allowComments,
+    bool? hideLikeCount,
+    bool? isLiked,
+    DateTime? createdAt,
+  }) {
+    return PostModel(
+      id: id ?? this.id,
+      authorId: authorId ?? this.authorId,
+      authorName: authorName ?? this.authorName,
+      authorAvatar: authorAvatar ?? this.authorAvatar,
+      caption: caption ?? this.caption,
+      media: media ?? this.media,
+      location: location ?? this.location,
+      hashtags: hashtags ?? this.hashtags,
+      likesCount: likesCount ?? this.likesCount,
+      commentsCount: commentsCount ?? this.commentsCount,
+      savesCount: savesCount ?? this.savesCount,
+      sharesCount: sharesCount ?? this.sharesCount,
+      allowComments: allowComments ?? this.allowComments,
+      hideLikeCount: hideLikeCount ?? this.hideLikeCount,
+      isLiked: isLiked ?? this.isLiked,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   String get firstImageUrl {
     if (media.isEmpty) return '';
