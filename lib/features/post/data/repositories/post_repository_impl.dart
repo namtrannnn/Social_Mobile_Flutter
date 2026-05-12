@@ -40,4 +40,11 @@ class PostRepository {
       allowedUsers: allowedUsers,
     );
   }
+
+  Future<Map<String, dynamic>> toggleLike({
+    required String token,
+    required String postId,
+  }) {
+    return remoteDataSource.toggleLike(token: token, postId: postId);
+  }
 }

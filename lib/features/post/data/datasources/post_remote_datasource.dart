@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'dart:convert';
 import '../../../../app/config/api_config.dart';
 import '../models/post_model.dart';
+import '../models/post_like_user_model.dart';
 
 class FeedPostResult {
   final List<PostModel> posts;
@@ -13,6 +14,24 @@ class FeedPostResult {
     required this.nextCursor,
     required this.hasMore,
   });
+}
+
+class LikedUsersResult {
+  final List<PostLikeUserModel> users;
+  final int page;
+  final int limit;
+  final int total;
+  final int totalPages;
+
+  LikedUsersResult({
+    required this.users,
+    required this.page,
+    required this.limit,
+    required this.total,
+    required this.totalPages,
+  });
+
+  bool get hasMore => page < totalPages;
 }
 
 class PostRemoteDataSource {
@@ -55,7 +74,7 @@ class PostRemoteDataSource {
     }
   }
 
-  // [POST createPost
+  // [POST] createPost
   Future<PostModel> createPost({
     required String token,
     required String caption,
@@ -116,6 +135,62 @@ class PostRemoteDataSource {
       print('CREATE POST ERROR: ${e.response?.data}');
 
       throw Exception(e.response?.data['message'] ?? 'Tạo bài viết thất bại');
+    }
+  }
+
+  // [POST] toggleLike
+  Future<Map<String, dynamic>> toggleLike({
+    required String token,
+    required String postId,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/post/toggle-like/$postId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      return response.data['data'];
+    } on DioException catch (e) {
+      print('TOGGLE LIKE ERROR: ${e.response?.data}');
+      throw Exception(e.response?.data['message'] ?? 'Thao tác like thất bại');
+    }
+  }
+
+  // [GET] UsersLikePost
+
+  Future<LikedUsersResult> getUsersLikedPost({
+    required String token,
+    required String postId,
+    int page = 1,
+    int limit = 20,
+    String search = '',
+  }) async {
+    try {
+      final response = await dio.get(
+        '/post/likes/$postId',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+          if (search.trim().isNotEmpty) 'search': search.trim(),
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      final List list = response.data['data'] ?? [];
+      final meta = response.data['meta'] ?? {};
+
+      return LikedUsersResult(
+        users: list.map((e) => PostLikeUserModel.fromJson(e)).toList(),
+        page: meta['page'] ?? page,
+        limit: meta['limit'] ?? limit,
+        total: meta['total'] ?? 0,
+        totalPages: meta['totalPages'] ?? 1,
+      );
+    } on DioException catch (e) {
+      print('GET LIKED USERS ERROR: ${e.response?.data}');
+      throw Exception(
+        e.response?.data['message'] ?? 'Lấy danh sách người thích thất bại',
+      );
     }
   }
 }
