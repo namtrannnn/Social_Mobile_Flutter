@@ -4,6 +4,7 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/main/presentation/screens/main_screen.dart';
 import 'route_names.dart';
 import '../../features/post/presentation/screens/create_post_screen.dart';
+import '../../features/notification/presentation/screens/notification_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -16,6 +17,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const MainScreen());
       case RouteNames.createPost:
         return MaterialPageRoute(builder: (_) => const CreatePostScreen());
+      case RouteNames.notifications:
+        return MaterialPageRoute(builder: (_) => const NotificationScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(

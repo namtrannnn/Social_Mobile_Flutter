@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../notification/presentation/widgets/notification_sheet.dart';
+// import '../../../notification/presentation/widgets/notification_sheet.dart';
 
 class AppHeader extends StatelessWidget {
   final String title;
@@ -27,22 +27,22 @@ class AppHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          if (showNotification)
-            IconButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  backgroundColor: Colors.white,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                  ),
-                  builder: (_) => const NotificationSheet(),
-                );
-              },
-              icon: const Icon(Icons.favorite_border_rounded),
-            ),
+          // if (showNotification)
+          //   IconButton(
+          //     onPressed: () {
+          //       showModalBottomSheet(
+          //         context: context,
+          //         backgroundColor: Colors.white,
+          //         shape: const RoundedRectangleBorder(
+          //           borderRadius: BorderRadius.vertical(
+          //             top: Radius.circular(24),
+          //           ),
+          //         ),
+          //         // builder: (_) => const NotificationSheet(),
+          //       );
+          //     },
+          //     icon: const Icon(Icons.favorite_border_rounded),
+          //   ),
         ],
       ),
     );

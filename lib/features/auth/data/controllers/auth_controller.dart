@@ -3,6 +3,7 @@ import '../models/user_model.dart';
 import '../repositories/auth_repository.dart';
 import '../../../../core/services/socket_service.dart';
 import '../../../../core/storage/secure_storage_service.dart';
+import '../../../../core/config/api_config.dart';
 
 class AuthController extends ChangeNotifier {
   final AuthRepository repository;
@@ -41,12 +42,12 @@ class AuthController extends ChangeNotifier {
         if (currentUser?.id != null && currentUser!.id.isNotEmpty) {
           await SecureStorageService.saveUserId(currentUser!.id);
         }
-        // if (tokenUser != null && tokenUser!.isNotEmpty) {
-        //   socketService.connect(
-        //     baseUrl: 'http://172.8.145.53:5000',
-        //     token: tokenUser!,
-        //   );
-        // }
+        if (tokenUser != null && tokenUser!.isNotEmpty) {
+          socketService.connect(
+            baseUrl: ApiConfig.socketUrl,
+            token: tokenUser!,
+          );
+        }
 
         return true;
       } else {
@@ -115,11 +116,12 @@ class AuthController extends ChangeNotifier {
   Future<void> logout() async {
     socketService.disconnect();
 
+    await Future.delayed(const Duration(milliseconds: 300));
+
     await SecureStorageService.clearAuth();
 
     currentUser = null;
     tokenUser = null;
-    errorMessage = null;
     isLoggedIn = false;
 
     notifyListeners();

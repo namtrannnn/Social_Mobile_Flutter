@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../friend/presentation/screens/friend_screen.dart';
 import '../../../chats/presentation/screens/chat_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
-import '../../../notification/presentation/widgets/notification_sheet.dart';
+import 'package:provider/provider.dart';
+import '../../../notification/presentation/controllers/notification_controller.dart';
+import '../../../notification/presentation/screens/notification_screen.dart';
 import '../widgets/home_tab.dart';
 
 class MainScreen extends StatefulWidget {
@@ -129,6 +131,8 @@ Widget _buildHeader(
   String title, {
   bool showNotification = false,
 }) {
+  final notificationController = context.watch<NotificationController>();
+
   return Container(
     padding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
     child: Row(
@@ -142,6 +146,7 @@ Widget _buildHeader(
           ),
         ),
         const Spacer(),
+
         if (showNotification)
           Stack(
             clipBehavior: Clip.none,
@@ -161,17 +166,15 @@ Widget _buildHeader(
                   ],
                 ),
                 child: IconButton(
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.white,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(24),
-                        ),
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NotificationScreen(),
                       ),
-                      builder: (_) => const NotificationSheet(),
                     );
+
+                    notificationController.loadNotifications();
                   },
                   icon: const Icon(
                     Icons.favorite_border_rounded,
@@ -179,29 +182,36 @@ Widget _buildHeader(
                   ),
                 ),
               ),
-              Positioned(
-                right: -2,
-                top: -2,
-                child: Container(
-                  width: 18,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF25019),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      '3',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
+
+              if (notificationController.unreadCount > 0)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF25019),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Center(
+                      child: Text(
+                        notificationController.unreadCount > 99
+                            ? '99+'
+                            : notificationController.unreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
       ],

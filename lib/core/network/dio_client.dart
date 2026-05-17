@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import '../../app/config/api_config.dart';
+import '../config/api_config.dart';
 
 class DioClient {
   static final DioClient _instance = DioClient._internal();

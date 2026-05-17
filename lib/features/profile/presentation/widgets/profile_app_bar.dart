@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/routes/route_names.dart';
-import '../../../../core/storage/secure_storage_service.dart';
+import '../../data/models/profile_model.dart';
+import '../../../auth/data/controllers/auth_controller.dart';
+import 'package:provider/provider.dart';
 
 class ProfileAppBar extends StatelessWidget {
-  const ProfileAppBar({super.key});
+  final ProfileModel profile;
+
+  const ProfileAppBar({super.key, required this.profile});
 
   Future<void> _logout(BuildContext context) async {
-    await SecureStorageService.clearAuth();
+    await context.read<AuthController>().logout();
 
     if (!context.mounted) return;
 
@@ -41,15 +45,11 @@ class ProfileAppBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(99),
                   ),
                 ),
-
                 ListTile(
                   leading: const Icon(Icons.settings_outlined),
                   title: const Text('Cài đặt'),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
+                  onTap: () => Navigator.pop(context),
                 ),
-
                 ListTile(
                   leading: const Icon(Icons.logout_rounded, color: Colors.red),
                   title: const Text(
@@ -64,8 +64,6 @@ class ProfileAppBar extends StatelessWidget {
                     await _logout(context);
                   },
                 ),
-
-                const SizedBox(height: 10),
               ],
             ),
           ),
@@ -76,41 +74,41 @@ class ProfileAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final username = profile.user.username.isEmpty
+        ? 'profile'
+        : profile.user.username;
+
     return AppBar(
-      automaticallyImplyLeading: false,
+      automaticallyImplyLeading: !profile.relation.isMe,
       backgroundColor: Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
+      iconTheme: const IconThemeData(color: Colors.black),
 
-      title: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'lethanhhoai',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(width: 4),
-          Icon(Icons.keyboard_arrow_down, color: Colors.black),
-        ],
+      leading: profile.relation.isMe
+          ? IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.add_box_outlined, color: Colors.black),
+            )
+          : null,
+
+      title: Text(
+        username,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+        ),
       ),
 
-      centerTitle: false,
+      centerTitle: true,
 
       actions: [
-        const Icon(Icons.add_box_outlined, color: Colors.black),
-
-        const SizedBox(width: 16),
-
-        GestureDetector(
-          onTap: () => _showMenu(context),
-          child: const Icon(Icons.menu, color: Colors.black),
-        ),
-
-        const SizedBox(width: 12),
+        if (profile.relation.isMe)
+          IconButton(
+            onPressed: () => _showMenu(context),
+            icon: const Icon(Icons.menu, color: Colors.black),
+          ),
       ],
     );
   }

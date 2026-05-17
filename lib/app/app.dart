@@ -61,26 +61,6 @@ class _MyAppState extends State<MyApp> {
   Future<void> _checkLogin() async {
     final token = await SecureStorageService.getValidToken();
 
-    if (token != null && token.isNotEmpty) {
-      // _socketService.connect(
-      //   baseUrl: 'http://172.8.145.53:5000',
-
-      //   // baseUrl: 'http://192.168.100.174:5000',
-
-      //   // baseUrl: 'http://172.8.194.162:5000',
-      //   token: token,
-      // );
-
-      // _chatSocketService.connect(
-      //   baseUrl: 'http://172.8.145.53:5000',
-
-      //   // baseUrl: 'http://192.168.100.174:5000',
-
-      //   // baseUrl: 'http://172.8.194.162:5000',
-      //   tokenUser: token,
-      // );
-    }
-
     if (!mounted) return;
 
     setState(() {

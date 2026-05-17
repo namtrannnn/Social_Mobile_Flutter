@@ -7,6 +7,7 @@ import '../controllers/post_controller.dart';
 import 'liked_users_bottom_sheet.dart';
 import 'comment_bottom_sheet.dart';
 import '../../../auth/data/controllers/auth_controller.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
 
 class PostCard extends StatefulWidget {
   final PostModel post;
@@ -20,17 +21,27 @@ class PostCard extends StatefulWidget {
 class _PostCardState extends State<PostCard> {
   bool _showHeart = false;
   late int localCommentsCount;
+  late bool localIsLiked;
+  late int localLikesCount;
+
   @override
   void initState() {
     super.initState();
     localCommentsCount = widget.post.commentsCount;
+    localIsLiked = widget.post.isLiked;
+    localLikesCount = widget.post.likesCount;
   }
 
   Future<void> _handleDoubleTapLike(PostModel post) async {
-    if (!post.isLiked) {
+    if (!localIsLiked) {
       final token = await SecureStorageService.getValidToken();
 
       if (token != null && mounted) {
+        setState(() {
+          localIsLiked = true;
+          localLikesCount += 1;
+        });
+
         context.read<PostController>().toggleLike(
           token: token,
           postId: post.id,
@@ -53,14 +64,22 @@ class _PostCardState extends State<PostCard> {
 
   Future<void> _handleLikeButton(PostModel post) async {
     final token = await SecureStorageService.getValidToken();
-
     if (token == null || !mounted) return;
+
+    setState(() {
+      localIsLiked = !localIsLiked;
+      localLikesCount += localIsLiked ? 1 : -1;
+
+      if (localLikesCount < 0) {
+        localLikesCount = 0;
+      }
+    });
 
     context.read<PostController>().toggleLike(token: token, postId: post.id);
   }
 
   void _openLikedUsers(PostModel post) {
-    if (post.likesCount <= 0) return;
+    if (localLikesCount <= 0) return;
 
     showModalBottomSheet(
       context: context,
@@ -72,6 +91,15 @@ class _PostCardState extends State<PostCard> {
       builder: (_) {
         return LikedUsersBottomSheet(postId: post.id);
       },
+    );
+  }
+
+  void _openAuthorProfile(PostModel post) {
+    if (post.authorId.isEmpty) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ProfileScreen(userId: post.authorId)),
     );
   }
 
@@ -93,40 +121,47 @@ class _PostCardState extends State<PostCard> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: const Color(0xFFF1F1F1),
-                  backgroundImage: validAuthorAvatar
-                      ? NetworkImage(post.authorAvatar)
-                      : null,
-                  child: !validAuthorAvatar
-                      ? const Icon(Icons.person, size: 20, color: Colors.grey)
-                      : null,
+                GestureDetector(
+                  onTap: () => _openAuthorProfile(post),
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: const Color(0xFFF1F1F1),
+                    backgroundImage: validAuthorAvatar
+                        ? NetworkImage(post.authorAvatar)
+                        : null,
+                    child: !validAuthorAvatar
+                        ? const Icon(Icons.person, size: 20, color: Colors.grey)
+                        : null,
+                  ),
                 ),
                 const SizedBox(width: 10),
 
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        post.authorName.isNotEmpty
-                            ? post.authorName
-                            : 'Người dùng',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                      if (post.location.isNotEmpty)
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _openAuthorProfile(post),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          post.location,
+                          post.authorName.isNotEmpty
+                              ? post.authorName
+                              : 'Người dùng',
                           style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
                           ),
                         ),
-                    ],
+                        if (post.location.isNotEmpty)
+                          Text(
+                            post.location,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
 
@@ -187,8 +222,8 @@ class _PostCardState extends State<PostCard> {
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   icon: Icon(
-                    post.isLiked ? Icons.favorite : Icons.favorite_border,
-                    color: post.isLiked ? Colors.red : Colors.black,
+                    localIsLiked ? Icons.favorite : Icons.favorite_border,
+                    color: localIsLiked ? Colors.red : Colors.black,
                     size: 28,
                   ),
                 ),
@@ -199,7 +234,7 @@ class _PostCardState extends State<PostCard> {
                   GestureDetector(
                     onTap: () => _openLikedUsers(post),
                     child: Text(
-                      '${post.likesCount}',
+                      '$localLikesCount',
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,

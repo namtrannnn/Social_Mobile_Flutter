@@ -5,4 +5,5 @@ class RouteNames {
   static const profile = '/profile';
   static const chat = '/chat';
   static const createPost = '/create-post';
+  static const notifications = '/notifications';
 }

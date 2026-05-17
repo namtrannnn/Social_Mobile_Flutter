@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'dart:convert';
-import '../../../../app/config/api_config.dart';
+import '../../../../core/config/api_config.dart';
 import '../models/post_model.dart';
 import '../models/post_like_user_model.dart';
 

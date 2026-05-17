@@ -37,25 +37,25 @@ class FriendController extends ChangeNotifier {
   }
 
   Future<void> addFriend(String userId) async {
-    socketService.addFriend(userId);
+    // socketService.addFriend(userId);
     await Future.delayed(const Duration(milliseconds: 300));
     await loadAll();
   }
 
   Future<void> cancelFriend(String userId) async {
-    socketService.cancelFriend(userId);
+    // socketService.cancelFriend(userId);
     await Future.delayed(const Duration(milliseconds: 300));
     await loadAll();
   }
 
   Future<void> acceptFriend(String userId) async {
-    socketService.acceptFriend(userId);
+    // socketService.acceptFriend(userId);
     await Future.delayed(const Duration(milliseconds: 300));
     await loadAll();
   }
 
   Future<void> refuseFriend(String userId) async {
-    socketService.refuseFriend(userId);
+    // socketService.refuseFriend(userId);
     await Future.delayed(const Duration(milliseconds: 300));
     await loadAll();
   }
