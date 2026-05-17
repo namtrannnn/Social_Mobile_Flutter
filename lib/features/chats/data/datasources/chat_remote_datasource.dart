@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models/chat_room.dart';
-import '../../../../app/config/api_config.dart';
+import '../../../../core/config/api_config.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 
 class ChatRemoteDatasource {

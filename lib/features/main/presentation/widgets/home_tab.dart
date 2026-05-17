@@ -8,6 +8,10 @@ import '../../../post/presentation/widgets/pending_post_card.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../app/routes/route_names.dart';
 
+import '../../../notification/presentation/controllers/notification_controller.dart';
+
+import '../../../notification/presentation/screens/notification_screen.dart';
+
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
 
@@ -26,7 +30,9 @@ class _HomeTabState extends State<HomeTab> {
 
       if (token == null) return;
 
-      context.read<PostController>().loadFeedPosts(token);
+      await context.read<PostController>().loadFeedPosts(token);
+
+      await context.read<NotificationController>().loadNotifications();
     });
 
     _scrollController.addListener(() async {
@@ -48,6 +54,8 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildInstagramHeader() {
+    final notificationController = context.watch<NotificationController>();
+
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -62,17 +70,71 @@ class _HomeTabState extends State<HomeTab> {
               fontFamily: 'Billabong',
             ),
           ),
+
           const Spacer(),
+
           IconButton(
             onPressed: () {
               Navigator.pushNamed(context, RouteNames.createPost);
             },
             icon: const Icon(Icons.add_box_outlined, size: 28),
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.favorite_border, size: 28),
+
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton(
+                onPressed: () async {
+                  await context.read<NotificationController>().markAllAsRead();
+
+                  if (!context.mounted) return;
+
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationScreen(),
+                    ),
+                  );
+
+                  if (!context.mounted) return;
+
+                  context.read<NotificationController>().loadNotifications();
+                },
+                icon: const Icon(Icons.favorite_border, size: 28),
+              ),
+
+              if (notificationController.unreadCount > 0)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF25019),
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    child: Center(
+                      child: Text(
+                        notificationController.unreadCount > 99
+                            ? '99+'
+                            : notificationController.unreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
+
           IconButton(
             onPressed: () {},
             icon: const Icon(Icons.send_outlined, size: 28),

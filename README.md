@@ -47,6 +47,21 @@ A Flutter social media application inspired by Instagram/Facebook, built with Fl
 - Local comment count update for current user actions
 - Show disabled-comment state when comments are turned off
 
+### [NOTIFICATION]
+
+- Display notification list
+- Show unread notification badge
+- Load unread notification count after login / app start
+- Real-time notification updates with Socket.IO
+- Add new notifications instantly when user is online
+- Mark single notification as read
+- Mark all notifications as read when opening notification screen
+- Delete notifications
+- Prevent duplicated real-time notifications
+- Keep notification badge in sync with local UI state
+- Support notification types with reference id and reference type
+- Redis-based unread notification count caching on backend
+
 ---
 
 ## Planned Features
@@ -91,3 +106,34 @@ A Flutter social media application inspired by Instagram/Facebook, built with Fl
 - Spam detection
 - Comment notification system
 - Admin moderation dashboard
+
+### [NOTIFICATION]
+
+- Notification settings
+- Mute notification by type
+- Push notifications
+- Notification grouping
+- Notification deep linking
+- Notification pagination
+- Notification filter by type
+- Notification search
+- Real-time notification read-state sync across devices
+- Friend request notification actions
+- Post like / comment / mention notifications
+- Follow / friend activity notifications
+- System announcement notifications
+
+### [FRIEND SYSTEM]
+
+- Send friend request
+- Cancel sent friend request
+- Accept friend request
+- Decline friend request
+- Remove friend
+- Display friend request list
+- Display sent request list
+- Display friend list
+- Friend request notification
+- Friend status button: Add friend / Requested / Accept / Friends
+- Real-time friend request updates with Socket.IO
+- Sync friend status across profile and notification screens

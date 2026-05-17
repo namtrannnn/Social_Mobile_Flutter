@@ -172,7 +172,10 @@ class PostController extends ChangeNotifier {
   }) async {
     final index = posts.indexWhere((post) => post.id == postId);
 
-    if (index == -1) return;
+    if (index == -1) {
+      await postRemoteDataSource.toggleLike(token: token, postId: postId);
+      return;
+    }
 
     final oldPost = posts[index];
 

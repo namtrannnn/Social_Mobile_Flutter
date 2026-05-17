@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import '../../../../app/config/api_config.dart';
+import '../../../../core/config/api_config.dart';
 import '../models/simple_user_model.dart';
 
 class UserRemoteDataSource {

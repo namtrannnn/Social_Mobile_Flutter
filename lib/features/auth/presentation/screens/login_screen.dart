@@ -35,10 +35,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _loadRememberData() async {
     final data = await LocalStorageService.getRememberLogin();
 
+    if (!mounted) return;
+
     setState(() {
-      rememberMe = data['rememberMe'] as bool;
-      emailController.text = data['email'] as String;
-      passwordController.text = data['password'] as String;
+      rememberMe = data['rememberMe'] ?? false;
+
+      emailController.text = data['email'] ?? '';
+
+      passwordController.text = data['password'] ?? '';
     });
   }
 

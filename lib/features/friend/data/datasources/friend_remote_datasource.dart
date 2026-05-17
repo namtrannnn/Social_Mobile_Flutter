@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/friend_user_model.dart';
-import '../../../../app/config/api_config.dart';
+import '../../../../core/config/api_config.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 
 class FriendRemoteDataSource {

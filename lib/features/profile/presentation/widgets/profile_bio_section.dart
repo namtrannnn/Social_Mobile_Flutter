@@ -1,42 +1,46 @@
 import 'package:flutter/material.dart';
 
+import '../../data/models/profile_model.dart';
+
 class ProfileBioSection extends StatelessWidget {
-  const ProfileBioSection({super.key});
+  final ProfileModel profile;
+
+  const ProfileBioSection({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    final user = profile.user;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Le Thanh Hoai',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: Colors.black,
+          if (user.bio.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              user.bio,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 14,
+                height: 1.4,
+              ),
             ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            'Mobile Developer',
-            style: TextStyle(color: Colors.grey, fontSize: 13),
-          ),
-          SizedBox(height: 4),
-          Text(
-            'Code, coffee và một chút chill ☕\nFlutter UI practice giống Instagram.',
-            style: TextStyle(color: Colors.black, fontSize: 14, height: 1.4),
-          ),
-          SizedBox(height: 4),
-          Text(
-            'github.com/lethanhhoai',
-            style: TextStyle(
-              color: Color(0xFF00376B),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+          ],
+
+          if (user.isPrivate) ...[
+            const SizedBox(height: 6),
+            const Row(
+              children: [
+                Icon(Icons.lock_outline, size: 15, color: Colors.grey),
+                SizedBox(width: 4),
+                Text(
+                  'Tài khoản riêng tư',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );
