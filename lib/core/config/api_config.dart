@@ -11,7 +11,7 @@ class ApiConfig {
     static const String _host = '192.168.110.129';
   */
 
-  static const String _host = '192.168.110.129';
+  static const String _host = '192.168.100.174';
   static const int _port = 5000;
 
   // URL gốc của server, dùng cho Socket.IO

@@ -1,123 +1,144 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../models/friend_user_model.dart';
-import '../../../../core/config/api_config.dart';
+import 'package:dio/dio.dart';
+
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/storage/secure_storage_service.dart';
+import '../models/friend_model.dart';
 
 class FriendRemoteDataSource {
-  Future<Map<String, String>> _headers() async {
-    final token = await SecureStorageService.getToken();
-    return {
-      'Content-Type': 'application/json',
-      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
-    };
+  final Dio _dio = DioClient().dio;
+
+  Future<Options> _authOptions() async {
+    final token = await SecureStorageService.getValidToken();
+
+    return Options(
+      headers: {
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+    );
   }
 
-  Future<List<FriendUserModel>> getSuggestions() async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/users/not-friend');
-    final response = await http.get(url, headers: await _headers());
+  String _extractMessage(DioException error, String fallbackMessage) {
+    final data = error.response?.data;
 
-    // print('getSuggestions URL: $url');
-    // print('getSuggestions status: ${response.statusCode}');
-    // print('getSuggestions body: ${response.body}');
-
-    if (response.statusCode != 200) {
-      throw Exception('API suggestions lỗi: ${response.statusCode}');
+    if (data is Map<String, dynamic>) {
+      return data['message']?.toString() ?? fallbackMessage;
     }
 
-    final data = jsonDecode(response.body);
-    if (data is! List) {
-      throw Exception('Dữ liệu suggestions không phải List');
-    }
-
-    return data.map<FriendUserModel>((e) {
-      return FriendUserModel.fromJson(e);
-    }).toList();
+    return fallbackMessage;
   }
 
-  Future<List<FriendUserModel>> getAcceptFriends() async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/users/accept');
-    final response = await http.get(url, headers: await _headers());
+  Future<String> getRelationStatus(String userId) async {
+    try {
+      final response = await _dio.get(
+        '/friends/status/$userId',
+        options: await _authOptions(),
+      );
 
-    // print('getAcceptFriends URL: $url');
-    // print('getAcceptFriends status: ${response.statusCode}');
-    // print('getAcceptFriends body: ${response.body}');
-
-    if (response.statusCode != 200) {
-      throw Exception('API accept lỗi: ${response.statusCode}');
+      return response.data['relationStatus']?.toString() ?? 'none';
+    } on DioException catch (e) {
+      throw Exception(_extractMessage(e, 'Không lấy được trạng thái quan hệ'));
     }
-
-    final data = jsonDecode(response.body);
-    if (data is! List) {
-      throw Exception('Dữ liệu accept không phải List');
-    }
-
-    return data.map<FriendUserModel>((e) {
-      return FriendUserModel.fromJson(e);
-    }).toList();
   }
 
-  Future<List<FriendUserModel>> getRequestFriends() async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/users/request');
-    final response = await http.get(url, headers: await _headers());
+  Future<String> sendRequest(String userId) async {
+    try {
+      final response = await _dio.post(
+        '/friends/request/$userId',
+        options: await _authOptions(),
+      );
 
-    // print('getRequestFriends URL: $url');
-    // print('getRequestFriends status: ${response.statusCode}');
-    // print('getRequestFriends body: ${response.body}');
-
-    if (response.statusCode != 200) {
-      throw Exception('API request lỗi: ${response.statusCode}');
+      return response.data['data']?['relationStatus']?.toString() ??
+          'pending_sent';
+    } on DioException catch (e) {
+      throw Exception(_extractMessage(e, 'Không gửi được lời mời kết bạn'));
     }
+  }
 
-    final data = jsonDecode(response.body);
-    if (data is! List) {
-      throw Exception('Dữ liệu request không phải List');
+  Future<String> cancelRequest(String userId) async {
+    try {
+      final response = await _dio.delete(
+        '/friends/request/$userId',
+        options: await _authOptions(),
+      );
+
+      return response.data['data']?['relationStatus']?.toString() ?? 'none';
+    } on DioException catch (e) {
+      throw Exception(_extractMessage(e, 'Không hủy được lời mời kết bạn'));
     }
-
-    return data.map<FriendUserModel>((e) {
-      return FriendUserModel.fromJson(e);
-    }).toList();
   }
 
-  Future<List<FriendUserModel>> getListFriends() async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/users/friends');
-    final response = await http.get(url, headers: await _headers());
+  Future<String> acceptRequest(String userId) async {
+    try {
+      final response = await _dio.post(
+        '/friends/accept/$userId',
+        options: await _authOptions(),
+      );
 
-    // print('getListFriends URL: $url');
-    // print('getListFriends status: ${response.statusCode}');
-    // print('getListFriends body: ${response.body}');
-
-    if (response.statusCode != 200) {
-      throw Exception('API friends lỗi: ${response.statusCode}');
+      return response.data['data']?['relationStatus']?.toString() ?? 'friend';
+    } on DioException catch (e) {
+      throw Exception(
+        _extractMessage(e, 'Không chấp nhận được lời mời kết bạn'),
+      );
     }
+  }
 
-    final data = jsonDecode(response.body);
-    if (data is! List) {
-      throw Exception('Dữ liệu friends không phải List');
+  Future<String> refuseRequest(String userId) async {
+    try {
+      final response = await _dio.delete(
+        '/friends/refuse/$userId',
+        options: await _authOptions(),
+      );
+
+      return response.data['data']?['relationStatus']?.toString() ?? 'none';
+    } on DioException catch (e) {
+      throw Exception(_extractMessage(e, 'Không từ chối được lời mời kết bạn'));
     }
-
-    return data.map<FriendUserModel>((e) {
-      return FriendUserModel.fromJson(e);
-    }).toList();
   }
 
-  Future<void> addFriend(String userId) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/users/add-friend/$userId');
-    await http.post(url, headers: await _headers());
+  Future<List<FriendModel>> getListFriends({String? userId}) async {
+    try {
+      final path = userId == null || userId.isEmpty
+          ? '/friends/list'
+          : '/friends/list/$userId';
+
+      final response = await _dio.get(path, options: await _authOptions());
+
+      final data = response.data['data'];
+      final friends = data?['friends'];
+
+      if (friends is! List) {
+        return [];
+      }
+
+      return friends
+          .map((item) => FriendModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw Exception(_extractMessage(e, 'Không lấy được danh sách bạn bè'));
+    }
   }
 
-  Future<void> acceptFriend(String userId) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/users/accept-friend/$userId');
-    await http.post(url, headers: await _headers());
-  }
+  Future<List<FriendModel>> getReceivedRequests() async {
+    try {
+      final response = await _dio.get(
+        '/friends/requests/received',
+        options: await _authOptions(),
+      );
 
-  Future<void> refuseFriend(String userId) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/users/refuse-friend/$userId');
-    await http.post(url, headers: await _headers());
-  }
+      final data = response.data['data'];
+      final requests = data?['requests'];
 
-  Future<void> cancelFriend(String userId) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/users/cancel-friend/$userId');
-    await http.post(url, headers: await _headers());
+      if (requests is! List) {
+        return [];
+      }
+
+      return requests
+          .map((item) => FriendModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw Exception(
+        _extractMessage(e, 'Không lấy được danh sách lời mời kết bạn'),
+      );
+    }
   }
 }

@@ -98,7 +98,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Consumer<ProfileController>(
       builder: (context, controller, child) {
         final user = controller.profile?.user ?? widget.profile.user;
-        print('AVATAR LOAD: $user');
+        // print('AVATAR LOAD: $user');
 
         return Scaffold(
           backgroundColor: Colors.white,

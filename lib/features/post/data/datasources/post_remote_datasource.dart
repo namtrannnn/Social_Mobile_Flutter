@@ -55,8 +55,8 @@ class PostRemoteDataSource {
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      print('GET FEED STATUS: ${response.statusCode}');
-      print('GET FEED DATA: ${response.data}');
+      // print('GET FEED STATUS: ${response.statusCode}');
+      // print('GET FEED DATA: ${response.data}');
 
       final data = response.data;
 
@@ -69,7 +69,7 @@ class PostRemoteDataSource {
         hasMore: pagination['hasMore'] ?? false,
       );
     } on DioException catch (e) {
-      print('GET FEED ERROR: ${e.response?.data}');
+      // print('GET FEED ERROR: ${e.response?.data}');
       throw Exception(e.response?.data['message'] ?? 'Lấy feed thất bại');
     }
   }
@@ -125,14 +125,14 @@ class PostRemoteDataSource {
         ),
       );
 
-      print('CREATE POST STATUS: ${response.statusCode}');
-      print('CREATE POST DATA: ${response.data}');
+      // print('CREATE POST STATUS: ${response.statusCode}');
+      // print('CREATE POST DATA: ${response.data}');
 
       final data = response.data['data'];
 
       return PostModel.fromJson(data);
     } on DioException catch (e) {
-      print('CREATE POST ERROR: ${e.response?.data}');
+      // print('CREATE POST ERROR: ${e.response?.data}');
 
       throw Exception(e.response?.data['message'] ?? 'Tạo bài viết thất bại');
     }
@@ -151,7 +151,7 @@ class PostRemoteDataSource {
 
       return response.data['data'];
     } on DioException catch (e) {
-      print('TOGGLE LIKE ERROR: ${e.response?.data}');
+      // print('TOGGLE LIKE ERROR: ${e.response?.data}');
       throw Exception(e.response?.data['message'] ?? 'Thao tác like thất bại');
     }
   }
@@ -187,7 +187,7 @@ class PostRemoteDataSource {
         totalPages: meta['totalPages'] ?? 1,
       );
     } on DioException catch (e) {
-      print('GET LIKED USERS ERROR: ${e.response?.data}');
+      // print('GET LIKED USERS ERROR: ${e.response?.data}');
       throw Exception(
         e.response?.data['message'] ?? 'Lấy danh sách người thích thất bại',
       );

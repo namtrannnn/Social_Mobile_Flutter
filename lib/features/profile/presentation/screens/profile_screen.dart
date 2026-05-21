@@ -12,6 +12,8 @@ import '../widgets/profile_tab_section.dart';
 import '../widgets/profile_top_section.dart';
 import '../widgets/profile_friends_section.dart';
 
+import '../../../friend/presentation/controllers/friend_controller.dart';
+
 class ProfileScreen extends StatefulWidget {
   final String? userId;
 
@@ -47,6 +49,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await controller.loadMyProfile(token);
       } else {
         await controller.loadUserProfile(token: token, userId: widget.userId!);
+
+        if (!mounted) return;
+
+        await context.read<FriendController>().loadRelationStatus(
+          widget.userId!,
+        );
       }
     });
   }
@@ -99,6 +107,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     token: token,
                     userId: widget.userId!,
                   );
+
+                  if (!context.mounted) return;
+
+                  await context.read<FriendController>().loadRelationStatus(
+                    widget.userId!,
+                  );
                 }
               },
               child: NestedScrollView(
@@ -117,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           ProfileBioSection(profile: controller.profile!),
                           ProfileActionButtons(profile: controller.profile!),
-                          const ProfileFriendsSection(),
+                          ProfileFriendsSection(profile: controller.profile!),
                           const SizedBox(height: 8),
                         ],
                       ),

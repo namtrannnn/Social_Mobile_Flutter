@@ -1,40 +1,39 @@
 import '../datasources/friend_remote_datasource.dart';
-import '../models/friend_user_model.dart';
+import '../models/friend_model.dart';
 
 class FriendRepository {
   final FriendRemoteDataSource remoteDataSource;
 
-  FriendRepository(this.remoteDataSource);
+  FriendRepository({required this.remoteDataSource});
 
-  Future<List<FriendUserModel>> getSuggestions() {
-    return remoteDataSource.getSuggestions();
+  Future<String> getRelationStatus(String userId) {
+    return remoteDataSource.getRelationStatus(userId);
   }
 
-  Future<List<FriendUserModel>> getAcceptFriends() {
-    return remoteDataSource.getAcceptFriends();
+  Future<String> sendRequest(String userId) {
+    return remoteDataSource.sendRequest(userId);
   }
 
-  Future<List<FriendUserModel>> getRequestFriends() {
-    return remoteDataSource.getRequestFriends();
+  Future<String> cancelRequest(String userId) {
+    return remoteDataSource.cancelRequest(userId);
   }
 
-  Future<List<FriendUserModel>> getListFriends() {
-    return remoteDataSource.getListFriends();
+  Future<String> acceptRequest(String userId) {
+    return remoteDataSource.acceptRequest(userId);
   }
 
-  Future<void> addFriend(String userId) {
-    return remoteDataSource.addFriend(userId);
+  Future<String> refuseRequest(String userId) {
+    return remoteDataSource.refuseRequest(userId);
   }
 
-  Future<void> acceptFriend(String userId) {
-    return remoteDataSource.acceptFriend(userId);
+  Future<List<FriendModel>> getReceivedRequests() {
+    return remoteDataSource.getReceivedRequests();
   }
+  // ==========================
+  // Friends List
+  // ==========================
 
-  Future<void> refuseFriend(String userId) {
-    return remoteDataSource.refuseFriend(userId);
-  }
-
-  Future<void> cancelFriend(String userId) {
-    return remoteDataSource.cancelFriend(userId);
+  Future<List<FriendModel>> getListFriends({String? userId}) {
+    return remoteDataSource.getListFriends(userId: userId);
   }
 }

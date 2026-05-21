@@ -46,17 +46,35 @@ class ChatMessage {
           .toList();
     }
 
+    final rawUserId = json['user_id'];
+    String parsedUserId = '';
+
+    if (rawUserId is Map) {
+      parsedUserId = (rawUserId['_id'] ?? rawUserId['id'] ?? '').toString();
+    } else {
+      parsedUserId = (rawUserId ?? '').toString();
+    }
+
+    final rawRoomId = json['roomChatId'] ?? json['room_chat_id'];
+    String parsedRoomId = '';
+
+    if (rawRoomId is Map) {
+      parsedRoomId = (rawRoomId['_id'] ?? rawRoomId['id'] ?? '').toString();
+    } else {
+      parsedRoomId = (rawRoomId ?? '').toString();
+    }
+
     return ChatMessage(
       id: (json['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString())
           .toString(),
-      userId: (json['user_id'] ?? '').toString(),
-      roomChatId: (json['roomChatId'] ?? json['room_chat_id'] ?? '').toString(),
+      userId: parsedUserId,
+      roomChatId: parsedRoomId,
       content: json['content']?.toString(),
       images: parsedImages,
       createdAt:
           DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
           DateTime.now(),
-      user: json['user'] is Map<String, dynamic>
+      user: json['user'] is Map
           ? Map<String, dynamic>.from(json['user'])
           : null,
     );
@@ -64,13 +82,9 @@ class ChatMessage {
 
   Map<String, dynamic> toSocketJson() {
     return {
-      '_id': id,
-      'user_id': userId,
       'roomChatId': roomChatId,
       'content': content,
       'images': images.map((e) => e.toJson()).toList(),
-      'createdAt': createdAt.toIso8601String(),
-      if (user != null) 'user': user,
     };
   }
 }

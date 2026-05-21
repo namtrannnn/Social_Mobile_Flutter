@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/profile_model.dart';
 import '../screens/edit_profile_screen.dart';
+import '../../../friend/presentation/widgets/friend_action_button.dart';
 
 class ProfileActionButtons extends StatelessWidget {
   final ProfileModel profile;
@@ -11,8 +12,6 @@ class ProfileActionButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMe = profile.relation.isMe;
-    final isFollowing = profile.relation.isFollowing;
-    final isFriend = profile.relation.isFriend;
 
     if (isMe) {
       return Padding(
@@ -56,33 +55,14 @@ class ProfileActionButtons extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _ProfileButton(
-              text: isFollowing ? 'Following' : 'Follow',
-              backgroundColor: isFollowing ? Colors.grey.shade100 : Colors.blue,
-              foregroundColor: isFollowing ? Colors.black : Colors.white,
-              onTap: () {
-                // TODO: call follow/unfollow API sau
-              },
+            child: FriendActionButton(
+              userId: profile.user.id,
+              initialStatus: profile.relation.relationStatus,
             ),
           ),
           const SizedBox(width: 6),
           Expanded(
             child: _ProfileButton(text: 'Message', onTap: () {}),
-          ),
-          const SizedBox(width: 6),
-          Container(
-            height: 34,
-            width: 34,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              isFriend
-                  ? Icons.person_remove_alt_1_outlined
-                  : Icons.person_add_alt_1_outlined,
-              size: 18,
-            ),
           ),
         ],
       ),

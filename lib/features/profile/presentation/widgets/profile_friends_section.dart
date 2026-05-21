@@ -1,17 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class ProfileFriendsSection extends StatelessWidget {
-  const ProfileFriendsSection({super.key});
+import '../../data/models/profile_model.dart';
+import '../../../friend/presentation/controllers/friend_controller.dart';
+import '../../../friend/presentation/screens/friend_list_screen.dart';
+
+class ProfileFriendsSection extends StatefulWidget {
+  final ProfileModel profile;
+
+  const ProfileFriendsSection({super.key, required this.profile});
+
+  @override
+  State<ProfileFriendsSection> createState() => _ProfileFriendsSectionState();
+}
+
+class _ProfileFriendsSectionState extends State<ProfileFriendsSection> {
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      context.read<FriendController>().loadFriends(
+        userId: widget.profile.user.id,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final friends = [
-      {'name': 'Nam', 'avatar': 'https://i.pravatar.cc/150?img=1'},
-      {'name': 'Hoài', 'avatar': 'https://i.pravatar.cc/150?img=2'},
-      {'name': 'Minh', 'avatar': 'https://i.pravatar.cc/150?img=3'},
-      {'name': 'An', 'avatar': 'https://i.pravatar.cc/150?img=4'},
-      {'name': 'Huy', 'avatar': 'https://i.pravatar.cc/150?img=5'},
-    ];
+    final friendController = context.watch<FriendController>();
+    final friends = friendController.friends.take(10).toList();
+
+    if (friendController.isLoadingFriends) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (friends.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 0, 8),
@@ -31,7 +60,17 @@ class ProfileFriendsSection extends StatelessWidget {
                 ),
                 const Spacer(),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FriendListScreen(
+                          userId: widget.profile.user.id,
+                          title: 'Bạn bè',
+                        ),
+                      ),
+                    );
+                  },
                   child: const Text(
                     'Xem tất cả',
                     style: TextStyle(
@@ -62,11 +101,18 @@ class ProfileFriendsSection extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundImage: NetworkImage(friend['avatar']!),
+                        backgroundColor: Colors.grey.shade200,
+                        backgroundImage:
+                            friend.avatar != null && friend.avatar!.isNotEmpty
+                            ? NetworkImage(friend.avatar!)
+                            : null,
+                        child: friend.avatar == null || friend.avatar!.isEmpty
+                            ? const Icon(Icons.person, color: Colors.grey)
+                            : null,
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        friend['name']!,
+                        friend.fullName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(

@@ -43,8 +43,8 @@ class ProfileRemoteDataSource {
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
 
-    print('===== PROFILE GRID RESPONSE =====');
-    print(res.data);
+    // print('===== PROFILE GRID RESPONSE =====');
+    // print(res.data);
 
     final List data = res.data['data'] ?? [];
 
