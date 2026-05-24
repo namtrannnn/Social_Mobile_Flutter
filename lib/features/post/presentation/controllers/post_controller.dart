@@ -17,6 +17,59 @@ class PostController extends ChangeNotifier {
   String? error;
   bool isCreatingPost = false;
   final List<PendingPostModel> pendingPosts = [];
+  bool isEditingPost = false;
+
+  Future<bool> editPost({
+    required String token,
+    required String postId,
+    required String caption,
+    required String location,
+    required bool allowComments,
+    required bool hideLikeCount,
+    required bool hideShare,
+    required String visibility,
+    required List<String> allowedUsers,
+    required List<String> mentions,
+    required List<String> keepMediaIds,
+    required List<String> imagePaths,
+  }) async {
+    try {
+      isEditingPost = true;
+      error = null;
+      notifyListeners();
+
+      final updatedPost = await postRemoteDataSource.editPost(
+        token: token,
+        postId: postId,
+        caption: caption,
+        location: location,
+        allowComments: allowComments,
+        hideLikeCount: hideLikeCount,
+        hideShare: hideShare,
+        visibility: visibility,
+        allowedUsers: allowedUsers,
+        mentions: mentions,
+        keepMediaIds: keepMediaIds,
+        imagePaths: imagePaths,
+      );
+
+      final index = posts.indexWhere((post) => post.id == postId);
+
+      if (index != -1) {
+        posts[index] = updatedPost;
+      }
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      error = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      isEditingPost = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> loadFeedPosts(String token) async {
     try {
@@ -137,23 +190,26 @@ class PostController extends ChangeNotifier {
       notifyListeners();
       await Future.delayed(const Duration(seconds: 3));
 
-      final newPost = await postRemoteDataSource.createPost(
-        token: token,
-        caption: caption,
-        location: location,
-        imagePaths: imagePaths,
-        allowComments: allowComments,
-        hideLikeCount: hideLikeCount,
-        hideShare: hideShare,
-        visibility: visibility,
-        allowedUsers: allowedUsers,
-        mentions: mentions,
-      );
+      // GIẢ LẬP LỖI ĐỂ TEST RETRY
+      throw Exception('Test lỗi tạo bài viết');
 
-      pendingPosts.removeWhere((item) => item.tempId == pendingPost.tempId);
-      posts.insert(0, newPost);
+      // final newPost = await postRemoteDataSource.createPost(
+      //   token: token,
+      //   caption: caption,
+      //   location: location,
+      //   imagePaths: imagePaths,
+      //   allowComments: allowComments,
+      //   hideLikeCount: hideLikeCount,
+      //   hideShare: hideShare,
+      //   visibility: visibility,
+      //   allowedUsers: allowedUsers,
+      //   mentions: mentions,
+      // );
 
-      return true;
+      // pendingPosts.removeWhere((item) => item.tempId == pendingPost.tempId);
+      // posts.insert(0, newPost);
+
+      // return true;
     } catch (e) {
       pendingPost.isUploading = false;
       pendingPost.isFailed = true;
@@ -199,6 +255,38 @@ class PostController extends ChangeNotifier {
     } catch (e) {
       posts[index] = oldPost;
       error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  PostModel? selectedPost;
+  bool isLoadingDetail = false;
+  String? detailError;
+  Future<void> loadPostDetail({
+    required String token,
+    required String postId,
+  }) async {
+    try {
+      isLoadingDetail = true;
+      detailError = null;
+      selectedPost = null;
+      notifyListeners();
+
+      final result = await postRemoteDataSource.getPostDetail(
+        token: token,
+        postId: postId,
+      );
+
+      selectedPost = result;
+
+      final index = posts.indexWhere((item) => item.id == postId);
+      if (index != -1) {
+        posts[index] = result;
+      }
+    } catch (e) {
+      detailError = e.toString();
+    } finally {
+      isLoadingDetail = false;
       notifyListeners();
     }
   }

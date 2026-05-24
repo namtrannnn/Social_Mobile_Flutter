@@ -10,13 +10,33 @@ class FriendController extends ChangeNotifier {
 
   bool isLoading = false;
   String? errorMessage;
-  bool isLoadingFriends = false;
+
+  // =========================
+  // FRIEND LIST BY USER
+  // =========================
+
+  final Map<String, List<FriendModel>> _friendsByUserId = {};
+  final Map<String, bool> _loadingFriendsByUserId = {};
+
+  // Giữ lại biến cũ để các màn khác chưa sửa vẫn không lỗi
   List<FriendModel> friends = [];
+  bool isLoadingFriends = false;
+
   final Map<String, String> _relationStatusByUserId = {};
+
   bool isLoadingRequests = false;
   List<FriendModel> receivedRequests = [];
+
   String getRelationStatusLocal(String userId) {
     return _relationStatusByUserId[userId] ?? 'none';
+  }
+
+  List<FriendModel> getFriendsByUserId(String userId) {
+    return _friendsByUserId[userId] ?? [];
+  }
+
+  bool isLoadingFriendsByUserId(String userId) {
+    return _loadingFriendsByUserId[userId] ?? false;
   }
 
   Future<void> loadRelationStatus(String userId) async {
@@ -93,7 +113,8 @@ class FriendController extends ChangeNotifier {
 
       receivedRequests.removeWhere((item) => item.id == userId);
 
-      await loadFriends();
+      // Load lại danh sách bạn bè của chính mình
+      await loadFriends(refresh: true);
 
       notifyListeners();
     } catch (e) {
@@ -155,32 +176,59 @@ class FriendController extends ChangeNotifier {
     }
   }
 
-  Future<void> loadFriends({String? userId}) async {
+  Future<void> loadFriends({String? userId, bool refresh = false}) async {
+    final key = userId ?? 'me';
+
+    if ((_loadingFriendsByUserId[key] ?? false) && !refresh) return;
+
     try {
+      _loadingFriendsByUserId[key] = true;
       isLoadingFriends = true;
       errorMessage = null;
       notifyListeners();
 
       final result = await repository.getListFriends(userId: userId);
 
+      _friendsByUserId[key] = result;
+
+      // Giữ tương thích code cũ
       friends = result;
     } catch (e) {
       errorMessage = e.toString();
       debugPrint('loadFriends error: $e');
     } finally {
+      _loadingFriendsByUserId[key] = false;
       isLoadingFriends = false;
       notifyListeners();
     }
+  }
+
+  void clearFriendsOfUser(String? userId) {
+    final key = userId ?? 'me';
+
+    _friendsByUserId.remove(key);
+    _loadingFriendsByUserId.remove(key);
+
+    if (key == 'me') {
+      friends.clear();
+    }
+
+    notifyListeners();
   }
 
   void clear() {
     isLoading = false;
     isLoadingFriends = false;
     errorMessage = null;
+
     friends.clear();
+    _friendsByUserId.clear();
+    _loadingFriendsByUserId.clear();
+
     isLoadingRequests = false;
     receivedRequests.clear();
     _relationStatusByUserId.clear();
+
     notifyListeners();
   }
 }

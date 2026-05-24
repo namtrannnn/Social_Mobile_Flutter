@@ -193,4 +193,81 @@ class PostRemoteDataSource {
       );
     }
   }
+
+  Future<PostModel> editPost({
+    required String token,
+    required String postId,
+    required String caption,
+    required String location,
+    required bool allowComments,
+    required bool hideLikeCount,
+    required bool hideShare,
+    required String visibility,
+    required List<String> allowedUsers,
+    required List<String> mentions,
+    required List<String> keepMediaIds,
+    required List<String> imagePaths,
+  }) async {
+    try {
+      final List<MultipartFile> images = [];
+
+      for (final path in imagePaths) {
+        images.add(
+          await MultipartFile.fromFile(path, filename: path.split('/').last),
+        );
+      }
+
+      final formData = FormData.fromMap({
+        'caption': caption,
+        'location': location,
+        'allowComments': allowComments.toString(),
+        'hideLikeCount': hideLikeCount.toString(),
+        'hideShare': hideShare.toString(),
+        'visibility': visibility,
+        'allowedUsers': jsonEncode(allowedUsers),
+        'mentions': jsonEncode(mentions),
+        'keepMediaIds': jsonEncode(keepMediaIds),
+        'images': images,
+      });
+
+      final response = await dio.patch(
+        '/post/edit/$postId',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+
+      final data = response.data['data'];
+
+      return PostModel.fromJson(data);
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Cập nhật bài viết thất bại',
+      );
+    }
+  }
+
+  Future<PostModel> getPostDetail({
+    required String token,
+    required String postId,
+  }) async {
+    try {
+      final response = await dio.get(
+        '/post/$postId',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      final data = response.data['data'];
+
+      return PostModel.fromJson(data);
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Không lấy được chi tiết bài viết',
+      );
+    }
+  }
 }

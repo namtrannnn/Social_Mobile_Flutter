@@ -30,13 +30,13 @@ class SocketService {
     );
 
     _socket!.onConnect((_) {
-      print('✅ Socket connected');
+      print('Socket connected');
       print('socket id: ${_socket!.id}');
     });
 
     _socket!.off('SERVER_ONLINE_READY');
     _socket!.on('SERVER_ONLINE_READY', (data) {
-      print('🟢 SERVER_ONLINE_READY: $data');
+      print(' SERVER_ONLINE_READY: $data');
 
       if (!completer.isCompleted) {
         completer.complete();
@@ -44,11 +44,11 @@ class SocketService {
     });
 
     _socket!.onDisconnect((data) {
-      print('❌ Socket disconnected: $data');
+      print(' Socket disconnected: $data');
     });
 
     _socket!.onConnectError((data) {
-      print('❌ Socket connect error: $data');
+      print(' Socket connect error: $data');
 
       if (!completer.isCompleted) {
         completer.completeError(data);
@@ -56,7 +56,7 @@ class SocketService {
     });
 
     _socket!.onError((data) {
-      print('❌ Socket error: $data');
+      print(' Socket error: $data');
     });
 
     _listenNotificationEvents();
@@ -67,7 +67,7 @@ class SocketService {
     return completer.future.timeout(
       const Duration(seconds: 5),
       onTimeout: () {
-        print('⚠️ Socket online ready timeout');
+        print(' Socket online ready timeout');
       },
     );
   }
@@ -79,7 +79,7 @@ class SocketService {
   void _listenNotificationEvents() {
     _socket?.off('SERVER_NOTIFICATION_NEW');
     _socket?.on('SERVER_NOTIFICATION_NEW', (data) {
-      print('🔔 SERVER_NOTIFICATION_NEW: $data');
+      print('SERVER_NOTIFICATION_NEW: $data');
 
       final notificationJson = data['notification'];
 
@@ -99,13 +99,13 @@ class SocketService {
   void _listenFriendEvents() {
     _socket?.off('SERVER_FRIEND_REQUEST_RECEIVED');
     _socket?.on('SERVER_FRIEND_REQUEST_RECEIVED', (data) {
-      print('👥 SERVER_FRIEND_REQUEST_RECEIVED: $data');
+      print('SERVER_FRIEND_REQUEST_RECEIVED: $data');
       onFriendRequestReceived?.call(data);
     });
 
     _socket?.off('SERVER_ACCEPT_FRIEND_SUCCESS');
     _socket?.on('SERVER_ACCEPT_FRIEND_SUCCESS', (data) {
-      print('✅ SERVER_ACCEPT_FRIEND_SUCCESS: $data');
+      print('SERVER_ACCEPT_FRIEND_SUCCESS: $data');
       onAcceptFriendSuccess?.call(data);
     });
   }
@@ -119,52 +119,52 @@ class SocketService {
 
   void joinRoom(String roomId) {
     if (!isConnected) {
-      print('⚠️ Socket chưa connect, không thể join room');
+      print(' Socket chưa connect, không thể join room');
       return;
     }
 
-    print('📌 CLIENT_JOIN_ROOM: $roomId');
+    print(' CLIENT_JOIN_ROOM: $roomId');
     _socket?.emit('CLIENT_JOIN_ROOM', roomId);
   }
 
   void sendMessage(Map<String, dynamic> data) {
     if (!isConnected) {
-      print('⚠️ Socket chưa connect, không thể gửi tin nhắn');
+      print(' Socket chưa connect, không thể gửi tin nhắn');
       return;
     }
 
-    print('📤 CLIENT_SEND_MESSAGE: $data');
+    print(' CLIENT_SEND_MESSAGE: $data');
     _socket?.emit('CLIENT_SEND_MESSAGE', data);
   }
 
   void emitTypingStart(String roomChatId) {
     if (!isConnected) {
-      print('⚠️ Socket chưa connect, không thể gửi typing start');
+      print(' Socket chưa connect, không thể gửi typing start');
       return;
     }
 
     final data = {'room_chat_id': roomChatId};
 
-    print('⌨️ CLIENT_TYPING_START: $data');
+    print('CLIENT_TYPING_START: $data');
     _socket?.emit('CLIENT_TYPING_START', data);
   }
 
   void emitTypingStop(String roomChatId) {
     if (!isConnected) {
-      print('⚠️ Socket chưa connect, không thể gửi typing stop');
+      print(' Socket chưa connect, không thể gửi typing stop');
       return;
     }
 
     final data = {'room_chat_id': roomChatId};
 
-    print('🛑 CLIENT_TYPING_STOP: $data');
+    print('CLIENT_TYPING_STOP: $data');
     _socket?.emit('CLIENT_TYPING_STOP', data);
   }
 
   void listenTypingStart(void Function(dynamic data) callback) {
     _socket?.off('SERVER_TYPING_START');
     _socket?.on('SERVER_TYPING_START', (data) {
-      print('⌨️ SERVER_TYPING_START: $data');
+      print('⌨SERVER_TYPING_START: $data');
       callback(data);
     });
   }
@@ -172,7 +172,7 @@ class SocketService {
   void listenTypingStop(void Function(dynamic data) callback) {
     _socket?.off('SERVER_TYPING_STOP');
     _socket?.on('SERVER_TYPING_STOP', (data) {
-      print('🛑 SERVER_TYPING_STOP: $data');
+      print('SERVER_TYPING_STOP: $data');
       callback(data);
     });
   }
@@ -185,7 +185,7 @@ class SocketService {
   void listenChatMessage(void Function(dynamic data) callback) {
     _socket?.off('SERVER_RETURN_MESSAGE');
     _socket?.on('SERVER_RETURN_MESSAGE', (data) {
-      print('📩 SERVER_RETURN_MESSAGE: $data');
+      print('SERVER_RETURN_MESSAGE: $data');
       callback(data);
     });
   }
@@ -197,7 +197,7 @@ class SocketService {
   void listenChatError(void Function(dynamic data) callback) {
     _socket?.off('SERVER_CHAT_ERROR');
     _socket?.on('SERVER_CHAT_ERROR', (data) {
-      print('❌ SERVER_CHAT_ERROR: $data');
+      print(' SERVER_CHAT_ERROR: $data');
       callback(data);
     });
   }
@@ -213,7 +213,7 @@ class SocketService {
   void listenUserOnline(void Function(dynamic data) callback) {
     _socket?.off('SERVER_USER_ONLINE');
     _socket?.on('SERVER_USER_ONLINE', (data) {
-      print('🟢 SERVER_USER_ONLINE: $data');
+      print(' SERVER_USER_ONLINE: $data');
       callback(data);
     });
   }
@@ -221,7 +221,7 @@ class SocketService {
   void listenUserOffline(void Function(dynamic data) callback) {
     _socket?.off('SERVER_USER_OFFLINE');
     _socket?.on('SERVER_USER_OFFLINE', (data) {
-      print('⚫ SERVER_USER_OFFLINE: $data');
+      print('SERVER_USER_OFFLINE: $data');
       callback(data);
     });
   }
@@ -237,7 +237,7 @@ class SocketService {
 
   void disconnect() {
     if (_socket != null) {
-      print('🧹 Disconnect socket...');
+      print('Disconnect socket...');
 
       _socket!.clearListeners();
       _socket!.disconnect();
@@ -246,7 +246,7 @@ class SocketService {
 
       _socket = null;
 
-      print('✅ Socket disposed');
+      print('Socket disposed');
     }
   }
 }

@@ -33,6 +33,18 @@ class ProfileRepository {
     );
   }
 
+  Future<List<ProfileGridPostModel>> getMentionedPostGrid({
+    required String token,
+    required String userId,
+    String? cursor,
+  }) {
+    return remoteDataSource.getMentionedPostGrid(
+      token: token,
+      userId: userId,
+      cursor: cursor,
+    );
+  }
+
   Future<List<PostModel>> getUserPostFeed({
     required String token,
     required String userId,

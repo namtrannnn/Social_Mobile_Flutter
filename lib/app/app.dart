@@ -7,6 +7,8 @@ import '../core/services/socket_service.dart';
 
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/main/presentation/screens/main_screen.dart';
+import 'package:provider/provider.dart';
+import '../core/config/api_config.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -19,7 +21,7 @@ class _MyAppState extends State<MyApp> {
   bool _isCheckingLogin = true;
   String _initialRoute = RouteNames.login;
 
-  final SocketService _socketService = SocketService();
+  // final SocketService _socketService = SocketService();
 
   @override
   void initState() {
@@ -29,6 +31,13 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _checkLogin() async {
     final token = await SecureStorageService.getValidToken();
+
+    if (token != null && token.isNotEmpty && mounted) {
+      await context.read<SocketService>().connect(
+        baseUrl: ApiConfig.socketUrl,
+        token: token,
+      );
+    }
 
     if (!mounted) return;
 
@@ -40,11 +49,11 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  @override
-  void dispose() {
-    _socketService.disconnect();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   _socketService.disconnect();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {

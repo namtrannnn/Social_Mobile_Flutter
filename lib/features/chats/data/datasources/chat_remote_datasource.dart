@@ -32,9 +32,6 @@ class ChatRemoteDatasource {
 
     final response = await http.get(url, headers: await _headers());
 
-    // print('🔥 CHAT API STATUS: ${response.statusCode}');
-    // print('🔥 CHAT API BODY: ${response.body}');
-
     final data = await _decodeResponse(response);
 
     if (response.statusCode != 200) {
@@ -62,9 +59,6 @@ class ChatRemoteDatasource {
     );
 
     final response = await http.get(url, headers: await _headers());
-
-    // print('🔥 CHAT MESSAGES STATUS: ${response.statusCode}');
-    // print('🔥 CHAT MESSAGES BODY: ${response.body}');
 
     final data = await _decodeResponse(response);
 
@@ -98,9 +92,6 @@ class ChatRemoteDatasource {
       body: jsonEncode({'userId': userId}),
     );
 
-    // print('🔥 GET OR CREATE ROOM STATUS: ${response.statusCode}');
-    // print('🔥 GET OR CREATE ROOM BODY: ${response.body}');
-
     final data = await _decodeResponse(response);
 
     if (response.statusCode != 200) {
@@ -130,9 +121,6 @@ class ChatRemoteDatasource {
       body: jsonEncode({'title': title, 'usersId': usersId}),
     );
 
-    // print('🔥 CREATE GROUP ROOM STATUS: ${response.statusCode}');
-    // print('🔥 CREATE GROUP ROOM BODY: ${response.body}');
-
     final data = await _decodeResponse(response);
 
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -149,20 +137,20 @@ class ChatRemoteDatasource {
     return ChatRoom.fromJson(Map<String, dynamic>.from(data));
   }
 
-  // GET /api/v1/users/search-people-to-new-message?keyword=...
+  // GET /api/v1/user/search?q=...
+  // GET /api/v1/user/search?q=...
   Future<List<Map<String, dynamic>>> searchPeopleToNewMessage(
     String keyword,
   ) async {
     final encodedKeyword = Uri.encodeQueryComponent(keyword.trim());
 
-    final url = Uri.parse(
-      '${ApiConfig.baseUrl}/users/search-people-to-new-message?keyword=$encodedKeyword',
-    );
+    final url = Uri.parse('${ApiConfig.baseUrl}/user/search?q=$encodedKeyword');
 
     final response = await http.get(url, headers: await _headers());
 
-    // print('🔥 SEARCH CHAT USER STATUS: ${response.statusCode}');
-    // print('🔥 SEARCH CHAT USER BODY: ${response.body}');
+    print('SEARCH CHAT USER URL: $url');
+    print('SEARCH CHAT USER STATUS: ${response.statusCode}');
+    print('SEARCH CHAT USER BODY: ${response.body}');
 
     final data = await _decodeResponse(response);
 
@@ -173,12 +161,13 @@ class ChatRemoteDatasource {
       );
     }
 
-    final friends = data is Map ? data['friends'] : null;
+    final users = data is Map ? data['data'] : null;
 
-    return (friends as List? ?? [])
-        .where((e) => e != null && e is Map)
-        .map((e) => Map<String, dynamic>.from(e))
-        .toList();
+    return (users as List? ?? []).where((e) => e != null && e is Map).map((e) {
+      final user = Map<String, dynamic>.from(e as Map);
+
+      return {'user': user};
+    }).toList();
   }
 
   Future<Map<String, dynamic>> uploadImageToCloudinary(File file) async {
@@ -192,9 +181,6 @@ class ChatRemoteDatasource {
 
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
-
-    // print('🔥 CLOUDINARY STATUS: ${response.statusCode}');
-    // print('🔥 CLOUDINARY BODY: ${response.body}');
 
     final data = await _decodeResponse(response);
 
@@ -225,9 +211,6 @@ class ChatRemoteDatasource {
 
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
-
-    // print('🔥 CLOUDINARY BYTES STATUS: ${response.statusCode}');
-    // print('🔥 CLOUDINARY BYTES BODY: ${response.body}');
 
     final data = await _decodeResponse(response);
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/friend_controller.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
 
 class FriendListScreen extends StatefulWidget {
   final String? userId;
@@ -143,13 +144,12 @@ class _FriendListScreenState extends State<FriendListScreen> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(18),
                       onTap: () {
-                        // Mốt gắn qua profile người đó
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (_) => ProfileScreen(userId: friend.id),
-                        //   ),
-                        // );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProfileScreen(userId: friend.id),
+                          ),
+                        );
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(12),

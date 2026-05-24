@@ -51,6 +51,30 @@ class ProfileRemoteDataSource {
     return data.map((e) => ProfileGridPostModel.fromJson(e)).toList();
   }
 
+  Future<List<ProfileGridPostModel>> getMentionedPostGrid({
+    required String token,
+    required String userId,
+    String? cursor,
+  }) async {
+    try {
+      final response = await dio.get(
+        '/post/mentions/$userId',
+        queryParameters: {if (cursor != null) 'cursor': cursor, 'limit': 30},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      final data = response.data['data'];
+
+      if (data is! List) {
+        return [];
+      }
+
+      return data.map((item) => ProfileGridPostModel.fromJson(item)).toList();
+    } catch (e) {
+      throw Exception('Không lấy được bài viết được nhắc tới: $e');
+    }
+  }
+
   Future<List<PostModel>> getUserPostFeed({
     required String token,
     required String userId,

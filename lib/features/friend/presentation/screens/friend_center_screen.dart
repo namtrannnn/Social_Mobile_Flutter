@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import '../../../profile/presentation/screens/profile_screen.dart';
 import '../controllers/friend_controller.dart';
 
 class FriendCenterScreen extends StatefulWidget {
@@ -37,6 +37,15 @@ class _FriendCenterScreenState extends State<FriendCenterScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _openProfile(String userId) {
+    if (userId.isEmpty) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ProfileScreen(userId: userId)),
+    );
   }
 
   Future<void> _refresh() async {
@@ -175,42 +184,46 @@ class _FriendCenterScreenState extends State<FriendCenterScreen>
             ),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    _FriendAvatar(avatarUrl: avatarUrl),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _openProfile(user.id),
+                  child: Row(
+                    children: [
+                      _FriendAvatar(avatarUrl: avatarUrl),
 
-                    const SizedBox(width: 12),
+                      const SizedBox(width: 12),
 
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user.fullName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: textColor,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user.fullName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: textColor,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user.username == null || user.username!.isEmpty
-                                ? 'Chưa có username'
-                                : '@${user.username}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Colors.black54,
+                            const SizedBox(height: 4),
+                            Text(
+                              user.username == null || user.username!.isEmpty
+                                  ? 'Chưa có username'
+                                  : '@${user.username}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.black54,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 12),
@@ -237,7 +250,7 @@ class _FriendCenterScreenState extends State<FriendCenterScreen>
                                   );
                                 },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
+                            backgroundColor: const Color(0xFF1877F2),
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
@@ -346,37 +359,44 @@ class _FriendCenterScreenState extends State<FriendCenterScreen>
             ),
             child: Row(
               children: [
-                _FriendAvatar(avatarUrl: avatarUrl),
+                GestureDetector(
+                  onTap: () => _openProfile(friend.id),
+                  child: _FriendAvatar(avatarUrl: avatarUrl),
+                ),
 
                 const SizedBox(width: 12),
 
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        friend.fullName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: textColor,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _openProfile(friend.id),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          friend.fullName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: textColor,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        friend.username == null || friend.username!.isEmpty
-                            ? 'Chưa có username'
-                            : '@${friend.username}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.black54,
+                        const SizedBox(height: 4),
+                        Text(
+                          friend.username == null || friend.username!.isEmpty
+                              ? 'Chưa có username'
+                              : '@${friend.username}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.black54,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 

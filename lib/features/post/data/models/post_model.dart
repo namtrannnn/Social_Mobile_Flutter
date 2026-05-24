@@ -14,6 +14,10 @@ class PostModel {
   final bool allowComments;
   final bool hideLikeCount;
   final bool isLiked;
+  final bool hideShare;
+  final String visibility;
+  final List<String> allowedUsers;
+  final List<String> mentions;
   final DateTime? createdAt;
 
   PostModel({
@@ -32,6 +36,10 @@ class PostModel {
     required this.allowComments,
     required this.hideLikeCount,
     required this.isLiked,
+    required this.hideShare,
+    required this.visibility,
+    required this.allowedUsers,
+    required this.mentions,
     required this.createdAt,
   });
 
@@ -59,6 +67,24 @@ class PostModel {
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
           : null,
+      hideShare: json['hideShare'] ?? false,
+      visibility: json['visibility'] ?? 'public',
+      allowedUsers: (json['allowedUsers'] as List? ?? [])
+          .map((e) {
+            if (e is String) return e;
+            if (e is Map && e['_id'] != null) return e['_id'].toString();
+            return '';
+          })
+          .where((e) => e.isNotEmpty)
+          .toList(),
+      mentions: (json['mentions'] as List? ?? [])
+          .map((e) {
+            if (e is String) return e;
+            if (e is Map && e['_id'] != null) return e['_id'].toString();
+            return '';
+          })
+          .where((e) => e.isNotEmpty)
+          .toList(),
     );
   }
   PostModel copyWith({
@@ -78,6 +104,10 @@ class PostModel {
     bool? hideLikeCount,
     bool? isLiked,
     DateTime? createdAt,
+    bool? hideShare,
+    String? visibility,
+    List<String>? allowedUsers,
+    List<String>? mentions,
   }) {
     return PostModel(
       id: id ?? this.id,
@@ -96,6 +126,10 @@ class PostModel {
       hideLikeCount: hideLikeCount ?? this.hideLikeCount,
       isLiked: isLiked ?? this.isLiked,
       createdAt: createdAt ?? this.createdAt,
+      hideShare: hideShare ?? this.hideShare,
+      visibility: visibility ?? this.visibility,
+      allowedUsers: allowedUsers ?? this.allowedUsers,
+      mentions: mentions ?? this.mentions,
     );
   }
 

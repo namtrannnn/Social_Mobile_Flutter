@@ -817,8 +817,10 @@ class _ChatScreenState extends State<ChatScreen> {
       color: bgColor,
       child: Column(
         children: [
+          _buildNewMessageHeader(chat),
+
           Container(
-            margin: const EdgeInsets.all(12),
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: cardColor,
@@ -836,12 +838,17 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           ),
+
           Expanded(
             child: chat.listPeopleToNewMessage.isEmpty
                 ? _buildEmptyState(
                     icon: Icons.person_search_rounded,
-                    title: 'Tìm người để nhắn',
-                    subtitle: 'Gõ tên hoặc username của bạn bè.',
+                    title: chat.listResultByPeopleSearch.isEmpty
+                        ? 'Tìm người để nhắn'
+                        : 'Đã chọn người nhận',
+                    subtitle: chat.listResultByPeopleSearch.isEmpty
+                        ? 'Gõ tên hoặc username của bạn bè.'
+                        : 'Nhập nội dung bên dưới rồi bấm gửi.',
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -850,11 +857,21 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemBuilder: (context, index) {
                       final e = chat.listPeopleToNewMessage[index];
                       final u = e['user'];
-                      final name = u['fullName']?.toString() ?? 'Người dùng';
-                      final avatar = u['avatar']?.toString();
+
+                      final name = u?['fullName']?.toString() ?? 'Người dùng';
+                      final avatar = u?['avatar']?.toString();
+
+                      final userId = u?['_id']?.toString();
+                      final selected =
+                          userId != null &&
+                          chat.listResultByPeopleSearch.any(
+                            (x) => x['user']?['_id']?.toString() == userId,
+                          );
 
                       return Material(
-                        color: cardColor,
+                        color: selected
+                            ? primaryColor.withOpacity(0.08)
+                            : cardColor,
                         borderRadius: BorderRadius.circular(16),
                         child: ListTile(
                           shape: RoundedRectangleBorder(
@@ -864,28 +881,34 @@ class _ChatScreenState extends State<ChatScreen> {
                             imageUrl: avatar,
                             name: name,
                             radius: 22,
-                            isOnline: u['isOnline'] == true,
+                            isOnline: u?['isOnline'] == true,
                           ),
                           title: Text(
                             name,
                             style: const TextStyle(fontWeight: FontWeight.w800),
                           ),
                           subtitle: Text(
-                            u['username'] != null
+                            u?['username'] != null
                                 ? '@${u['username']}'
                                 : 'Bạn bè',
                             style: const TextStyle(color: mutedText),
                           ),
-                          trailing: const Icon(
-                            Icons.add_circle_outline_rounded,
+                          trailing: Icon(
+                            selected
+                                ? Icons.check_circle_rounded
+                                : Icons.add_circle_outline_rounded,
                             color: primaryColor,
                           ),
-                          onTap: () => chat.addPeopleResult(e),
+                          onTap: () {
+                            chat.addPeopleResult(e);
+                            searchController.clear();
+                          },
                         ),
                       );
                     },
                   ),
           ),
+
           _buildInputBar(chat),
         ],
       ),

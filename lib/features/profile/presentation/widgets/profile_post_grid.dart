@@ -2,12 +2,38 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/profile_post_grid_model.dart';
 import '../screens/user_posts_screen.dart';
+import '../../../post/presentation/screens/post_detail_screen.dart';
 
 class ProfilePostGrid extends StatelessWidget {
   final String userId;
   final List<ProfileGridPostModel> posts;
+  final bool openAsDetail;
 
-  const ProfilePostGrid({super.key, required this.userId, required this.posts});
+  const ProfilePostGrid({
+    super.key,
+    required this.userId,
+    required this.posts,
+    this.openAsDetail = false,
+  });
+
+  void _openPost(BuildContext context, int index) {
+    final post = posts[index];
+
+    if (openAsDetail) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => PostDetailScreen(postId: post.id)),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserPostsScreen(userId: userId, initialIndex: index),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +51,7 @@ class ProfilePostGrid extends StatelessWidget {
         ],
       );
     }
+
     return GridView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(top: 2),
@@ -41,15 +68,7 @@ class ProfilePostGrid extends StatelessWidget {
         if (media == null || media.url.isEmpty) {
           return GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      UserPostsScreen(userId: userId, initialIndex: index),
-                ),
-              );
-            },
+            onTap: () => _openPost(context, index),
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -75,7 +94,6 @@ class ProfilePostGrid extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   Center(
                     child: Text(
                       post.caption.trim().isNotEmpty
@@ -92,7 +110,6 @@ class ProfilePostGrid extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   const Positioned(
                     right: 0,
                     bottom: 0,
@@ -113,15 +130,7 @@ class ProfilePostGrid extends StatelessWidget {
             : media.url;
 
         return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    UserPostsScreen(userId: userId, initialIndex: index),
-              ),
-            );
-          },
+          onTap: () => _openPost(context, index),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -146,7 +155,7 @@ class ProfilePostGrid extends StatelessWidget {
               if (media.type == 'video')
                 const Positioned(
                   top: 6,
-                  right: 6,
+                  left: 6,
                   child: Icon(
                     Icons.play_arrow_rounded,
                     color: Colors.white,

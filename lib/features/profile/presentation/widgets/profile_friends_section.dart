@@ -15,23 +15,53 @@ class ProfileFriendsSection extends StatefulWidget {
 }
 
 class _ProfileFriendsSectionState extends State<ProfileFriendsSection> {
+  String get profileUserId => widget.profile.user.id;
+
   @override
   void initState() {
     super.initState();
 
     Future.microtask(() {
+      if (!mounted) return;
+
       context.read<FriendController>().loadFriends(
-        userId: widget.profile.user.id,
+        userId: profileUserId,
+        refresh: true,
       );
     });
   }
 
   @override
+  void didUpdateWidget(covariant ProfileFriendsSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    final oldUserId = oldWidget.profile.user.id;
+    final newUserId = widget.profile.user.id;
+
+    if (oldUserId != newUserId) {
+      Future.microtask(() {
+        if (!mounted) return;
+
+        context.read<FriendController>().loadFriends(
+          userId: newUserId,
+          refresh: true,
+        );
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final friendController = context.watch<FriendController>();
-    final friends = friendController.friends.take(10).toList();
 
-    if (friendController.isLoadingFriends) {
+    final isLoading = friendController.isLoadingFriendsByUserId(profileUserId);
+
+    final friends = friendController
+        .getFriendsByUserId(profileUserId)
+        .take(10)
+        .toList();
+
+    if (isLoading && friends.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Center(child: CircularProgressIndicator()),
@@ -65,7 +95,7 @@ class _ProfileFriendsSectionState extends State<ProfileFriendsSection> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => FriendListScreen(
-                          userId: widget.profile.user.id,
+                          userId: profileUserId,
                           title: 'Bạn bè',
                         ),
                       ),

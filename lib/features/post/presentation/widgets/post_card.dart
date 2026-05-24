@@ -8,6 +8,7 @@ import 'liked_users_bottom_sheet.dart';
 import 'comment_bottom_sheet.dart';
 import '../../../auth/data/controllers/auth_controller.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../screens/edit_post_screen.dart';
 
 class PostCard extends StatefulWidget {
   final PostModel post;
@@ -103,6 +104,168 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
+  void _openPostOptions(PostModel post) async {
+    final auth = context.read<AuthController>();
+    final currentUserId =
+        auth.currentUser?.id ?? await SecureStorageService.getUserId() ?? '';
+
+    if (!mounted) return;
+
+    final bool isOwner = currentUserId == post.authorId;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+
+                if (isOwner) ...[
+                  ListTile(
+                    leading: const Icon(Icons.edit_outlined),
+                    title: const Text(
+                      'Sửa bài viết',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    onTap: () async {
+                      Navigator.pop(context);
+
+                      final updated = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EditPostScreen(post: post),
+                        ),
+                      );
+
+                      if (!mounted) return;
+
+                      if (updated == true) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Bài viết đã được cập nhật'),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+
+                  ListTile(
+                    leading: const Icon(Icons.lock_outline),
+                    title: const Text(
+                      'Quyền riêng tư',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: const Text('Sửa ai có thể xem bài viết'),
+                    onTap: () async {
+                      Navigator.pop(context);
+
+                      await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EditPostScreen(post: post),
+                        ),
+                      );
+                    },
+                  ),
+
+                  ListTile(
+                    leading: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                    ),
+                    title: const Text(
+                      'Xóa bài viết',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Phần xóa bài viết mình sẽ làm tiếp sau',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ] else ...[
+                  ListTile(
+                    leading: const Icon(Icons.report_outlined),
+                    title: const Text('Báo cáo bài viết'),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<TextSpan> _buildCaptionSpans(String caption) {
+    final regex = RegExp(r'(@[a-zA-Z0-9_\.]+)');
+
+    final spans = <TextSpan>[];
+    int start = 0;
+
+    for (final match in regex.allMatches(caption)) {
+      if (match.start > start) {
+        spans.add(
+          TextSpan(
+            text: caption.substring(start, match.start),
+            style: const TextStyle(color: Colors.black),
+          ),
+        );
+      }
+
+      spans.add(
+        TextSpan(
+          text: match.group(0),
+          style: const TextStyle(
+            color: Colors.blue,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+
+      start = match.end;
+    }
+
+    if (start < caption.length) {
+      spans.add(
+        TextSpan(
+          text: caption.substring(start),
+          style: const TextStyle(color: Colors.black),
+        ),
+      );
+    }
+
+    return spans;
+  }
+
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
@@ -165,7 +328,10 @@ class _PostCardState extends State<PostCard> {
                   ),
                 ),
 
-                const Icon(Icons.more_horiz, size: 24),
+                GestureDetector(
+                  onTap: () => _openPostOptions(post),
+                  child: const Icon(Icons.more_horiz, size: 24),
+                ),
               ],
             ),
           ),
@@ -320,7 +486,7 @@ class _PostCardState extends State<PostCard> {
                     fontSize: 14,
                     height: 1.35,
                   ),
-                  children: [TextSpan(text: post.caption)],
+                  children: _buildCaptionSpans(post.caption),
                 ),
               ),
             ),

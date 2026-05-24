@@ -11,7 +11,7 @@ import '../widgets/profile_post_grid.dart';
 import '../widgets/profile_tab_section.dart';
 import '../widgets/profile_top_section.dart';
 import '../widgets/profile_friends_section.dart';
-
+import '../../../post/presentation/screens/post_detail_screen.dart';
 import '../../../friend/presentation/controllers/friend_controller.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -25,6 +25,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final ScrollController _scrollController = ScrollController();
+
+  bool get isMyProfile => widget.userId == null;
 
   void _scrollToGridPosts() {
     _scrollController.animateTo(
@@ -42,12 +44,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final token = await SecureStorageService.getValidToken();
       if (token == null) return;
 
-      final controller = context.read<ProfileController>();
-      controller.clearProfile();
+      if (!mounted) return;
 
-      if (widget.userId == null) {
+      final controller = context.read<ProfileController>();
+
+      if (isMyProfile) {
+        controller.clearMyProfile();
         await controller.loadMyProfile(token);
       } else {
+        controller.clearViewedProfile();
+
         await controller.loadUserProfile(token: token, userId: widget.userId!);
 
         if (!mounted) return;
@@ -60,6 +66,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant ProfileScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.userId != widget.userId) {
+      Future.microtask(() async {
+        final token = await SecureStorageService.getValidToken();
+        if (token == null) return;
+
+        if (!mounted) return;
+
+        final controller = context.read<ProfileController>();
+
+        if (isMyProfile) {
+          controller.clearMyProfile();
+          await controller.loadMyProfile(token);
+        } else {
+          controller.clearViewedProfile();
+
+          await controller.loadUserProfile(
+            token: token,
+            userId: widget.userId!,
+          );
+
+          if (!mounted) return;
+
+          await context.read<FriendController>().loadRelationStatus(
+            widget.userId!,
+          );
+        }
+      });
+    }
+  }
+
+  Future<void> _refreshProfile(ProfileController controller) async {
+    final token = await SecureStorageService.getValidToken();
+    if (token == null) return;
+
+    if (isMyProfile) {
+      await controller.loadMyProfile(token);
+    } else {
+      await controller.loadUserProfile(token: token, userId: widget.userId!);
+
+      if (!mounted) return;
+
+      await context.read<FriendController>().loadRelationStatus(widget.userId!);
+    }
+  }
+
+  @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
@@ -69,13 +124,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Consumer<ProfileController>(
       builder: (context, controller, child) {
-        if (controller.isLoadingProfile && controller.profile == null) {
+        final profile = isMyProfile
+            ? controller.myProfile
+            : controller.viewedProfile;
+
+        final gridPosts = isMyProfile
+            ? controller.myGridPosts
+            : controller.viewedGridPosts;
+        final mentionedPosts = isMyProfile
+            ? controller.myMentionedPosts
+            : controller.viewedMentionedPosts;
+        if (controller.isLoadingProfile && profile == null) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        if (controller.profile == null) {
+        if (profile == null) {
           return const Scaffold(
             body: Center(child: Text('Không tải được profile')),
           );
@@ -85,39 +150,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           length: 3,
           child: Scaffold(
             backgroundColor: Colors.white,
-
             appBar: PreferredSize(
               preferredSize: const Size.fromHeight(kToolbarHeight),
-              child: ProfileAppBar(profile: controller.profile!),
+              child: ProfileAppBar(profile: profile),
             ),
-
             body: RefreshIndicator(
               triggerMode: RefreshIndicatorTriggerMode.onEdge,
               notificationPredicate: (_) => true,
               color: Colors.black,
               backgroundColor: Colors.white,
-              onRefresh: () async {
-                final token = await SecureStorageService.getValidToken();
-                if (token == null) return;
-
-                if (widget.userId == null) {
-                  await controller.loadMyProfile(token);
-                } else {
-                  await controller.loadUserProfile(
-                    token: token,
-                    userId: widget.userId!,
-                  );
-
-                  if (!context.mounted) return;
-
-                  await context.read<FriendController>().loadRelationStatus(
-                    widget.userId!,
-                  );
-                }
-              },
+              onRefresh: () => _refreshProfile(controller),
               child: NestedScrollView(
                 controller: _scrollController,
-
                 physics: const AlwaysScrollableScrollPhysics(),
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
@@ -126,12 +170,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           ProfileTopSection(
-                            profile: controller.profile!,
+                            profile: profile,
                             onPostsTap: _scrollToGridPosts,
                           ),
-                          ProfileBioSection(profile: controller.profile!),
-                          ProfileActionButtons(profile: controller.profile!),
-                          ProfileFriendsSection(profile: controller.profile!),
+                          ProfileBioSection(profile: profile),
+                          ProfileActionButtons(profile: profile),
+                          ProfileFriendsSection(profile: profile),
                           const SizedBox(height: 8),
                         ],
                       ),
@@ -144,12 +188,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 },
                 body: TabBarView(
                   children: [
-                    ProfilePostGrid(
-                      userId: controller.profile!.user.id,
-                      posts: controller.gridPosts,
-                    ),
+                    ProfilePostGrid(userId: profile.user.id, posts: gridPosts),
+
                     const Center(child: Text('Chưa có reels')),
-                    const Center(child: Text('Chưa có ảnh được gắn thẻ')),
+
+                    controller.isLoadingMentioned && mentionedPosts.isEmpty
+                        ? const Center(child: CircularProgressIndicator())
+                        : mentionedPosts.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Chưa có bài viết nhắc tới người này',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          )
+                        : ProfilePostGrid(
+                            userId: profile.user.id,
+                            posts: mentionedPosts,
+                            openAsDetail: true,
+                          ),
                   ],
                 ),
               ),

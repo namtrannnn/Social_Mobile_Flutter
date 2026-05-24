@@ -37,12 +37,56 @@ import 'features/chats/presentation/controllers/chat_controller.dart';
 
 import 'features/search/presentation/controllers/global_search_controller.dart';
 
+class AppSocketBinder extends StatefulWidget {
+  final Widget child;
+
+  const AppSocketBinder({super.key, required this.child});
+
+  @override
+  State<AppSocketBinder> createState() => _AppSocketBinderState();
+}
+
+class _AppSocketBinderState extends State<AppSocketBinder> {
+  bool _isBound = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_isBound) return;
+    _isBound = true;
+
+    final socketService = context.read<SocketService>();
+
+    socketService.onNewNotification = (notification) {
+      context.read<NotificationController>().addRealtimeNotification(
+        notification,
+      );
+    };
+
+    socketService.onFriendRequestReceived = (data) {
+      context.read<FriendController>().loadReceivedRequests();
+    };
+
+    socketService.onAcceptFriendSuccess = (data) {
+      context.read<FriendController>().loadFriends();
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
+  }
+}
+
 void main() {
   final socketService = SocketService();
 
   runApp(
     MultiProvider(
       providers: [
+        Provider<SocketService>.value(value: socketService),
+
         ChangeNotifierProvider(
           create: (_) => AuthController(
             AuthRepository(AuthRemoteDataSource()),
@@ -100,7 +144,7 @@ void main() {
           ),
         ),
       ],
-      child: const MyApp(),
+      child: const AppSocketBinder(child: MyApp()),
     ),
   );
 }
