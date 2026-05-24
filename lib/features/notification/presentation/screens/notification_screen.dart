@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/notification_controller.dart';
 import '../../data/models/notification_model.dart';
+import '../../../friend/presentation/controllers/friend_controller.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -90,6 +91,86 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           onTap: () {
                             controller.markAsRead(notification.id);
                           },
+                          onAcceptFriendRequest:
+                              notification.type == 'friend_request'
+                              ? () async {
+                                  final friendController = context
+                                      .read<FriendController>();
+
+                                  await friendController.acceptRequest(
+                                    notification.sender.id,
+                                  );
+
+                                  if (!context.mounted) return;
+
+                                  if (friendController.errorMessage == null) {
+                                    await controller.markAsRead(
+                                      notification.id,
+                                    );
+                                    await controller.deleteNotification(
+                                      notification.id,
+                                    );
+
+                                    if (!context.mounted) return;
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Đã chấp nhận lời mời kết bạn',
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          friendController.errorMessage!,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
+                          onRefuseFriendRequest:
+                              notification.type == 'friend_request'
+                              ? () async {
+                                  final friendController = context
+                                      .read<FriendController>();
+
+                                  await friendController.refuseRequest(
+                                    notification.sender.id,
+                                  );
+
+                                  if (!context.mounted) return;
+
+                                  if (friendController.errorMessage == null) {
+                                    await controller.markAsRead(
+                                      notification.id,
+                                    );
+                                    await controller.deleteNotification(
+                                      notification.id,
+                                    );
+
+                                    if (!context.mounted) return;
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Đã từ chối lời mời kết bạn',
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          friendController.errorMessage!,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
                         ),
                       );
                     },
@@ -104,11 +185,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
 class NotificationTile extends StatelessWidget {
   final NotificationModel notification;
   final VoidCallback onTap;
+  final Future<void> Function()? onAcceptFriendRequest;
+  final Future<void> Function()? onRefuseFriendRequest;
 
   const NotificationTile({
     super.key,
     required this.notification,
     required this.onTap,
+    this.onAcceptFriendRequest,
+    this.onRefuseFriendRequest,
   });
 
   @override
@@ -161,10 +246,72 @@ class NotificationTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
+
                   Text(
                     _formatTime(notification.createdAt),
                     style: const TextStyle(fontSize: 12, color: Colors.black45),
                   ),
+
+                  if (notification.type == 'friend_request' &&
+                      onAcceptFriendRequest != null &&
+                      onRefuseFriendRequest != null) ...[
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 36,
+                            child: ElevatedButton(
+                              onPressed: onAcceptFriendRequest,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(9),
+                                ),
+                              ),
+                              child: const Text(
+                                'Chấp nhận',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 8),
+
+                        Expanded(
+                          child: SizedBox(
+                            height: 36,
+                            child: OutlinedButton(
+                              onPressed: onRefuseFriendRequest,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.black,
+                                side: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(9),
+                                ),
+                              ),
+                              child: const Text(
+                                'Từ chối',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

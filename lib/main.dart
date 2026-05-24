@@ -2,14 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app/app.dart';
+
+import 'core/services/socket_service.dart';
+
+import 'features/auth/data/controllers/auth_controller.dart';
+import 'features/auth/data/datasources/auth_remote_datasource.dart';
+import 'features/auth/data/repositories/auth_repository.dart';
+
 import 'features/post/data/datasources/post_remote_datasource.dart';
 import 'features/post/presentation/controllers/post_controller.dart';
 
-import '../features/user/data/datasources/user_remote_datasource.dart';
-import '../features/user/presentation/controllers/user_search_controller.dart';
-import '../features/post/data/datasources/comment_remote_datasource.dart';
-import '../features/post/data/repositories/comment_repository.dart';
-import '../features/post/presentation/controllers/comment_controller.dart';
+import 'features/user/data/datasources/user_remote_datasource.dart';
+import 'features/user/presentation/controllers/user_search_controller.dart';
+
+import 'features/post/data/datasources/comment_remote_datasource.dart';
+import 'features/post/data/repositories/comment_repository.dart';
+import 'features/post/presentation/controllers/comment_controller.dart';
 
 import 'features/profile/data/datasources/profile_remote_datasource.dart';
 import 'features/profile/data/repositories/profile_repository.dart';
@@ -19,10 +27,73 @@ import 'features/notification/data/datasources/notification_remote_datasource.da
 import 'features/notification/data/repositories/notification_repository.dart';
 import 'features/notification/presentation/controllers/notification_controller.dart';
 
+import 'features/friend/data/datasources/friend_remote_datasource.dart';
+import 'features/friend/data/repositories/friend_repository.dart';
+import 'features/friend/presentation/controllers/friend_controller.dart';
+
+import 'features/chats/data/datasources/chat_remote_datasource.dart';
+import 'features/chats/data/repositories/chat_repository.dart';
+import 'features/chats/presentation/controllers/chat_controller.dart';
+
+import 'features/search/presentation/controllers/global_search_controller.dart';
+
+class AppSocketBinder extends StatefulWidget {
+  final Widget child;
+
+  const AppSocketBinder({super.key, required this.child});
+
+  @override
+  State<AppSocketBinder> createState() => _AppSocketBinderState();
+}
+
+class _AppSocketBinderState extends State<AppSocketBinder> {
+  bool _isBound = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_isBound) return;
+    _isBound = true;
+
+    final socketService = context.read<SocketService>();
+
+    socketService.onNewNotification = (notification) {
+      context.read<NotificationController>().addRealtimeNotification(
+        notification,
+      );
+    };
+
+    socketService.onFriendRequestReceived = (data) {
+      context.read<FriendController>().loadReceivedRequests();
+    };
+
+    socketService.onAcceptFriendSuccess = (data) {
+      context.read<FriendController>().loadFriends();
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
+  }
+}
+
 void main() {
+  final socketService = SocketService();
+
   runApp(
     MultiProvider(
       providers: [
+        Provider<SocketService>.value(value: socketService),
+
+        ChangeNotifierProvider(
+          create: (_) => AuthController(
+            AuthRepository(AuthRemoteDataSource()),
+            socketService,
+          ),
+        ),
+
         ChangeNotifierProvider(
           create: (_) =>
               PostController(postRemoteDataSource: PostRemoteDataSource()),
@@ -33,6 +104,7 @@ void main() {
             userRemoteDataSource: UserRemoteDataSource(),
           ),
         ),
+        ChangeNotifierProvider(create: (_) => GlobalSearchController()),
         ChangeNotifierProvider(
           create: (_) => CommentController(
             repository: CommentRepository(
@@ -40,6 +112,7 @@ void main() {
             ),
           ),
         ),
+
         ChangeNotifierProvider(
           create: (_) => ProfileController(
             repository: ProfileRepository(
@@ -55,8 +128,23 @@ void main() {
             ),
           ),
         ),
+
+        ChangeNotifierProvider(
+          create: (_) => FriendController(
+            repository: FriendRepository(
+              remoteDataSource: FriendRemoteDataSource(),
+            ),
+          ),
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => ChatController(
+            repository: ChatRepository(remote: ChatRemoteDatasource()),
+            socketService: socketService,
+          ),
+        ),
       ],
-      child: const MyApp(),
+      child: const AppSocketBinder(child: MyApp()),
     ),
   );
 }

@@ -63,7 +63,7 @@ class _HomeTabState extends State<HomeTab> {
       child: Row(
         children: [
           const Text(
-            'Instagram',
+            'NHD',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w700,
@@ -135,10 +135,10 @@ class _HomeTabState extends State<HomeTab> {
             ],
           ),
 
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.send_outlined, size: 28),
-          ),
+          // IconButton(
+          //   onPressed: () {},
+          //   icon: const Icon(Icons.send_outlined, size: 28),
+          // ),
         ],
       ),
     );

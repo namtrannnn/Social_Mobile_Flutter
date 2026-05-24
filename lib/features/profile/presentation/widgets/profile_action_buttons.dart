@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/profile_model.dart';
 import '../screens/edit_profile_screen.dart';
+import '../../../friend/presentation/widgets/friend_action_button.dart';
 
 class ProfileActionButtons extends StatelessWidget {
   final ProfileModel profile;
@@ -11,17 +12,16 @@ class ProfileActionButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMe = profile.relation.isMe;
-    final isFollowing = profile.relation.isFollowing;
-    final isFriend = profile.relation.isFriend;
 
     if (isMe) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
         child: Row(
           children: [
             Expanded(
               child: _ProfileButton(
-                text: 'Edit profile',
+                text: 'Sửa hồ sơ',
+                icon: Icons.edit_outlined,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -32,19 +32,14 @@ class ProfileActionButtons extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: _ProfileButton(text: 'Share profile', onTap: () {}),
-            ),
-            const SizedBox(width: 6),
-            Container(
-              height: 34,
-              width: 34,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.person_add_alt_1_outlined, size: 18),
+
+            const SizedBox(width: 8),
+
+            _SquareProfileButton(
+              icon: Icons.person_add_alt_1_outlined,
+              onTap: () {
+                // TODO: mở màn chia sẻ / mời bạn bè nếu cần
+              },
             ),
           ],
         ),
@@ -52,36 +47,31 @@ class ProfileActionButtons extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
       child: Row(
         children: [
           Expanded(
-            child: _ProfileButton(
-              text: isFollowing ? 'Following' : 'Follow',
-              backgroundColor: isFollowing ? Colors.grey.shade100 : Colors.blue,
-              foregroundColor: isFollowing ? Colors.black : Colors.white,
-              onTap: () {
-                // TODO: call follow/unfollow API sau
-              },
+            child: SizedBox(
+              height: 38,
+              child: FriendActionButton(
+                userId: profile.user.id,
+                initialStatus: profile.relation.relationStatus,
+              ),
             ),
           ),
-          const SizedBox(width: 6),
+
+          const SizedBox(width: 8),
+
           Expanded(
-            child: _ProfileButton(text: 'Message', onTap: () {}),
-          ),
-          const SizedBox(width: 6),
-          Container(
-            height: 34,
-            width: 34,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              isFriend
-                  ? Icons.person_remove_alt_1_outlined
-                  : Icons.person_add_alt_1_outlined,
-              size: 18,
+            child: _ProfileButton(
+              text: 'Nhắn tin',
+              icon: Icons.chat_bubble_outline_rounded,
+              backgroundColor: const Color(0xFF111111),
+              foregroundColor: Colors.white,
+              borderColor: const Color(0xFF111111),
+              onTap: () {
+                // TODO: chuyển sang màn chat với user này
+              },
             ),
           ),
         ],
@@ -92,39 +82,94 @@ class ProfileActionButtons extends StatelessWidget {
 
 class _ProfileButton extends StatelessWidget {
   final String text;
+  final IconData? icon;
   final VoidCallback onTap;
   final Color? backgroundColor;
   final Color? foregroundColor;
+  final Color? borderColor;
 
   const _ProfileButton({
     required this.text,
     required this.onTap,
+    this.icon,
     this.backgroundColor,
     this.foregroundColor,
+    this.borderColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = backgroundColor ?? const Color(0xFFF5F5F5);
+    final fgColor = foregroundColor ?? const Color(0xFF1C1C1C);
+    final brColor = borderColor ?? const Color(0xFFE0E0E0);
+
     return SizedBox(
-      height: 34,
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          backgroundColor: backgroundColor ?? Colors.grey.shade100,
-          foregroundColor: foregroundColor ?? Colors.black,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: BorderSide(color: Colors.grey.shade300),
+      height: 38,
+      child: Material(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: brColor),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 16, color: fgColor),
+                  const SizedBox(width: 6),
+                ],
+                Flexible(
+                  child: Text(
+                    text,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: fgColor,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            text,
-            maxLines: 1,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+}
+
+class _SquareProfileButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _SquareProfileButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 38,
+      height: 38,
+      child: Material(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE0E0E0)),
+            ),
+            child: Icon(icon, size: 19, color: const Color(0xFF1C1C1C)),
           ),
         ),
       ),

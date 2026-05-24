@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../friend/presentation/screens/friend_screen.dart';
 import '../../../chats/presentation/screens/chat_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../search/presentation/screens/search_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../notification/presentation/controllers/notification_controller.dart';
 import '../../../notification/presentation/screens/notification_screen.dart';
@@ -20,8 +20,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> screens = const [
     HomeTab(),
     ChatScreen(),
-    _SearchTab(),
-    FriendScreen(),
+    SearchScreen(),
     ProfileScreen(),
   ];
 
@@ -66,61 +65,16 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(Icons.search_rounded),
               label: "Search",
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people_outline_rounded),
-              label: "Bạn bè",
-            ),
+            // BottomNavigationBarItem(
+            //   icon: Icon(Icons.people_outline_rounded),
+            //   label: "Bạn bè",
+            // ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline_rounded),
               label: "Profile",
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SearchTab extends StatelessWidget {
-  const _SearchTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        children: [
-          _buildHeader(context, "Tìm kiếm"),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Tìm bạn bè, bài viết...",
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GridView.count(
-              padding: const EdgeInsets.all(16),
-              crossAxisCount: 2,
-              mainAxisSpacing: 14,
-              crossAxisSpacing: 14,
-              children: const [
-                _SearchCard(title: "Bài viết nổi bật"),
-                _SearchCard(title: "Bạn bè mới"),
-                _SearchCard(title: "Hashtag xu hướng"),
-                _SearchCard(title: "Gợi ý theo dõi"),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -217,37 +171,4 @@ Widget _buildHeader(
       ],
     ),
   );
-}
-
-class _SearchCard extends StatelessWidget {
-  final String title;
-
-  const _SearchCard({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
-      ),
-    );
-  }
 }

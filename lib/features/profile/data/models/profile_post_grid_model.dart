@@ -18,23 +18,52 @@ class ProfileGridPostModel {
   });
 
   factory ProfileGridPostModel.fromJson(Map<String, dynamic> json) {
+    final media = json['media'];
+
+    ProfileMediaModel? parsedFirstMedia;
+    int parsedMediaCount = 0;
+
+    // Case 1: API grid cũ trả firstMedia
+    if (json['firstMedia'] != null &&
+        json['firstMedia'] is Map<String, dynamic>) {
+      parsedFirstMedia = ProfileMediaModel.fromJson(
+        json['firstMedia'] as Map<String, dynamic>,
+      );
+    }
+
+    // Case 2: API mentions/detail trả media[]
+    if (parsedFirstMedia == null && media is List && media.isNotEmpty) {
+      final firstItem = media.first;
+
+      if (firstItem is Map<String, dynamic>) {
+        parsedFirstMedia = ProfileMediaModel.fromJson(firstItem);
+      }
+    }
+
+    if (json['mediaCount'] != null) {
+      parsedMediaCount = _toInt(json['mediaCount']);
+    } else if (media is List) {
+      parsedMediaCount = media.length;
+    }
+
     return ProfileGridPostModel(
-      id: json['_id'] ?? '',
-
-      caption: json['caption'] ?? json['caption'] ?? '',
-
-      firstMedia: json['firstMedia'] != null
-          ? ProfileMediaModel.fromJson(json['firstMedia'])
-          : null,
-
-      mediaCount: json['mediaCount'] ?? 0,
-      likesCount: json['likesCount'] ?? 0,
-      commentsCount: json['commentsCount'] ?? 0,
-
+      id: json['_id']?.toString() ?? '',
+      caption: json['caption']?.toString() ?? '',
+      firstMedia: parsedFirstMedia,
+      mediaCount: parsedMediaCount,
+      likesCount: _toInt(json['likesCount']),
+      commentsCount: _toInt(json['commentsCount']),
       createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'])
+          ? DateTime.tryParse(json['createdAt'].toString())
           : null,
     );
+  }
+
+  static int _toInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value.toString()) ?? 0;
   }
 }
 
@@ -57,12 +86,19 @@ class ProfileMediaModel {
 
   factory ProfileMediaModel.fromJson(Map<String, dynamic> json) {
     return ProfileMediaModel(
-      url: json['url'] ?? '',
-      publicId: json['public_id'] ?? '',
-      type: json['type'] ?? 'image',
-      thumbnail: json['thumbnail'] ?? '',
-      width: json['width'] ?? 0,
-      height: json['height'] ?? 0,
+      url: json['url']?.toString() ?? '',
+      publicId: json['public_id']?.toString() ?? '',
+      type: json['type']?.toString() ?? 'image',
+      thumbnail: json['thumbnail']?.toString() ?? '',
+      width: _toInt(json['width']),
+      height: _toInt(json['height']),
     );
+  }
+
+  static int _toInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value.toString()) ?? 0;
   }
 }

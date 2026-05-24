@@ -5,6 +5,7 @@ import '../../../../core/storage/secure_storage_service.dart';
 import '../controllers/comment_controller.dart';
 import 'comment_item.dart';
 import '../../data/models/comment_model.dart';
+import 'dart:async';
 
 class CommentBottomSheet extends StatefulWidget {
   final String postId;
@@ -404,13 +405,18 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
   ) {
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
+    Timer? timer;
 
     int remainingSeconds = 5;
     bool isRemoved = false;
 
     void removeOverlay() {
-      if (!isRemoved && entry.mounted) {
-        isRemoved = true;
+      if (isRemoved) return;
+
+      isRemoved = true;
+      timer?.cancel();
+
+      if (entry.mounted) {
         entry.remove();
       }
     }
@@ -436,7 +442,6 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                   ),
                   TextButton(
                     onPressed: () async {
-                      isRemoved = true;
                       removeOverlay();
 
                       final undoToken =
@@ -460,23 +465,23 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
 
     overlay.insert(entry);
 
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-
-      if (isRemoved) return false;
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (isRemoved) {
+        timer.cancel();
+        return;
+      }
 
       remainingSeconds--;
 
       if (remainingSeconds <= 0) {
         removeOverlay();
-
         onFinalDelete();
-
-        return false;
+        return;
       }
 
-      entry.markNeedsBuild();
-      return true;
+      if (entry.mounted) {
+        entry.markNeedsBuild();
+      }
     });
   }
 

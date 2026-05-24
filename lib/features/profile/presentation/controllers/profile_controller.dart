@@ -7,8 +7,39 @@ import '../../../post/data/models/post_model.dart';
 
 class ProfileController extends ChangeNotifier {
   final ProfileRepository repository;
-  bool isUpdatingProfile = false;
+
   ProfileController({required this.repository});
+
+  bool isUpdatingProfile = false;
+
+  // =========================
+  // PROFILE STATE
+  // =========================
+
+  ProfileModel? myProfile;
+  ProfileModel? viewedProfile;
+
+  List<ProfileGridPostModel> myGridPosts = [];
+  List<ProfileGridPostModel> viewedGridPosts = [];
+
+  bool isLoadingProfile = false;
+  bool isLoadingGrid = false;
+  bool isLoadingMoreGrid = false;
+
+  String? errorMessage;
+
+  String? myNextCursor;
+  String? viewedNextCursor;
+
+  bool myHasMoreGrid = true;
+  bool viewedHasMoreGrid = true;
+
+  // =========================
+  // USER FEED POSTS
+  // Tạm giữ lại như cũ.
+  // Nếu sau này bị lẫn bài viết khi mở detail/feed thì tách tiếp.
+  // =========================
+
   List<PostModel> userFeedPosts = [];
 
   bool isLoadingUserFeed = false;
@@ -16,16 +47,10 @@ class ProfileController extends ChangeNotifier {
   bool hasMoreUserFeed = true;
 
   String? userFeedCursor;
-  ProfileModel? profile;
-  List<ProfileGridPostModel> gridPosts = [];
 
-  bool isLoadingProfile = false;
-  bool isLoadingGrid = false;
-  bool isLoadingMoreGrid = false;
-
-  String? errorMessage;
-  String? nextCursor;
-  bool hasMoreGrid = true;
+  // =========================
+  // LOAD MY PROFILE
+  // =========================
 
   Future<void> loadMyProfile(String token) async {
     isLoadingProfile = true;
@@ -33,11 +58,18 @@ class ProfileController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      profile = await repository.getMyProfile(token: token);
+      myProfile = await repository.getMyProfile(token: token);
 
       await loadUserPostGrid(
         token: token,
-        userId: profile!.user.id,
+        userId: myProfile!.user.id,
+        isMyProfile: true,
+        refresh: true,
+      );
+      await loadMentionedPostGrid(
+        token: token,
+        userId: myProfile!.user.id,
+        isMyProfile: true,
         refresh: true,
       );
     } catch (e) {
@@ -48,6 +80,10 @@ class ProfileController extends ChangeNotifier {
     }
   }
 
+  // =========================
+  // LOAD OTHER USER PROFILE
+  // =========================
+
   Future<void> loadUserProfile({
     required String token,
     required String userId,
@@ -57,9 +93,23 @@ class ProfileController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      profile = await repository.getUserProfile(token: token, userId: userId);
+      viewedProfile = await repository.getUserProfile(
+        token: token,
+        userId: userId,
+      );
 
-      await loadUserPostGrid(token: token, userId: userId, refresh: true);
+      await loadUserPostGrid(
+        token: token,
+        userId: userId,
+        isMyProfile: false,
+        refresh: true,
+      );
+      await loadMentionedPostGrid(
+        token: token,
+        userId: userId,
+        isMyProfile: false,
+        refresh: true,
+      );
     } catch (e) {
       errorMessage = e.toString();
     } finally {
@@ -68,20 +118,35 @@ class ProfileController extends ChangeNotifier {
     }
   }
 
+  // =========================
+  // LOAD GRID POSTS
+  // =========================
+
   Future<void> loadUserPostGrid({
     required String token,
     required String userId,
+    required bool isMyProfile,
     bool refresh = false,
   }) async {
     if (isLoadingGrid || isLoadingMoreGrid) return;
 
+    final currentHasMoreGrid = isMyProfile ? myHasMoreGrid : viewedHasMoreGrid;
+    final currentCursor = isMyProfile ? myNextCursor : viewedNextCursor;
+
     if (refresh) {
       isLoadingGrid = true;
-      nextCursor = null;
-      hasMoreGrid = true;
-      gridPosts = [];
+
+      if (isMyProfile) {
+        myNextCursor = null;
+        myHasMoreGrid = true;
+        myGridPosts = [];
+      } else {
+        viewedNextCursor = null;
+        viewedHasMoreGrid = true;
+        viewedGridPosts = [];
+      }
     } else {
-      if (!hasMoreGrid) return;
+      if (!currentHasMoreGrid) return;
       isLoadingMoreGrid = true;
     }
 
@@ -91,20 +156,34 @@ class ProfileController extends ChangeNotifier {
       final posts = await repository.getUserPostGrid(
         token: token,
         userId: userId,
-        cursor: refresh ? null : nextCursor,
+        cursor: refresh ? null : currentCursor,
       );
 
-      if (refresh) {
-        gridPosts = posts;
+      if (isMyProfile) {
+        if (refresh) {
+          myGridPosts = posts;
+        } else {
+          myGridPosts.addAll(posts);
+        }
+
+        if (posts.isNotEmpty) {
+          myNextCursor = posts.last.createdAt?.toIso8601String();
+        }
+
+        myHasMoreGrid = posts.length >= 30;
       } else {
-        gridPosts.addAll(posts);
-      }
+        if (refresh) {
+          viewedGridPosts = posts;
+        } else {
+          viewedGridPosts.addAll(posts);
+        }
 
-      if (posts.isNotEmpty) {
-        nextCursor = posts.last.createdAt?.toIso8601String();
-      }
+        if (posts.isNotEmpty) {
+          viewedNextCursor = posts.last.createdAt?.toIso8601String();
+        }
 
-      hasMoreGrid = posts.length >= 30;
+        viewedHasMoreGrid = posts.length >= 30;
+      }
     } catch (e) {
       errorMessage = e.toString();
     } finally {
@@ -113,6 +192,10 @@ class ProfileController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // =========================
+  // USER POST FEED
+  // =========================
 
   Future<void> loadUserPostFeed({
     required String token,
@@ -190,6 +273,10 @@ class ProfileController extends ChangeNotifier {
     }
   }
 
+  // =========================
+  // UPDATE MY PROFILE
+  // =========================
+
   Future<bool> updateProfile({
     required String token,
     required String fullName,
@@ -214,7 +301,11 @@ class ProfileController extends ChangeNotifier {
         avatarPath: avatarPath,
       );
 
-      profile = profile?.copyWith(user: updatedUser);
+      myProfile = myProfile?.copyWith(user: updatedUser);
+
+      if (viewedProfile?.user.id == updatedUser.id) {
+        viewedProfile = viewedProfile?.copyWith(user: updatedUser);
+      }
 
       isUpdatingProfile = false;
       notifyListeners();
@@ -230,12 +321,140 @@ class ProfileController extends ChangeNotifier {
     }
   }
 
-  void clearProfile() {
-    profile = null;
-    gridPosts = [];
+  // =========================
+  // CLEAR
+  // =========================
+
+  void clearMyProfile() {
+    myProfile = null;
+    myGridPosts = [];
+    myNextCursor = null;
+    myHasMoreGrid = true;
+
+    myMentionedPosts = [];
+    myMentionedCursor = null;
+    myHasMoreMentioned = true;
+
     errorMessage = null;
-    nextCursor = null;
-    hasMoreGrid = true;
+    notifyListeners();
+  }
+
+  void clearViewedProfile() {
+    viewedProfile = null;
+    viewedGridPosts = [];
+    viewedNextCursor = null;
+    viewedHasMoreGrid = true;
+
+    viewedMentionedPosts = [];
+    viewedMentionedCursor = null;
+    viewedHasMoreMentioned = true;
+
+    errorMessage = null;
+    notifyListeners();
+  }
+
+  List<ProfileGridPostModel> myMentionedPosts = [];
+  List<ProfileGridPostModel> viewedMentionedPosts = [];
+
+  String? myMentionedCursor;
+  String? viewedMentionedCursor;
+
+  bool isLoadingMentioned = false;
+  bool isLoadingMoreMentioned = false;
+
+  bool myHasMoreMentioned = true;
+  bool viewedHasMoreMentioned = true;
+  Future<void> loadMentionedPostGrid({
+    required String token,
+    required String userId,
+    required bool isMyProfile,
+    bool refresh = false,
+  }) async {
+    if (isLoadingMentioned || isLoadingMoreMentioned) return;
+
+    final currentHasMore = isMyProfile
+        ? myHasMoreMentioned
+        : viewedHasMoreMentioned;
+
+    final currentCursor = isMyProfile
+        ? myMentionedCursor
+        : viewedMentionedCursor;
+
+    if (refresh) {
+      isLoadingMentioned = true;
+
+      if (isMyProfile) {
+        myMentionedCursor = null;
+        myHasMoreMentioned = true;
+        myMentionedPosts = [];
+      } else {
+        viewedMentionedCursor = null;
+        viewedHasMoreMentioned = true;
+        viewedMentionedPosts = [];
+      }
+    } else {
+      if (!currentHasMore) return;
+      isLoadingMoreMentioned = true;
+    }
+
+    notifyListeners();
+
+    try {
+      final posts = await repository.getMentionedPostGrid(
+        token: token,
+        userId: userId,
+        cursor: refresh ? null : currentCursor,
+      );
+
+      if (isMyProfile) {
+        if (refresh) {
+          myMentionedPosts = posts;
+        } else {
+          myMentionedPosts.addAll(posts);
+        }
+
+        if (posts.isNotEmpty) {
+          myMentionedCursor = posts.last.createdAt?.toIso8601String();
+        }
+
+        myHasMoreMentioned = posts.length >= 30;
+      } else {
+        if (refresh) {
+          viewedMentionedPosts = posts;
+        } else {
+          viewedMentionedPosts.addAll(posts);
+        }
+
+        if (posts.isNotEmpty) {
+          viewedMentionedCursor = posts.last.createdAt?.toIso8601String();
+        }
+
+        viewedHasMoreMentioned = posts.length >= 30;
+      }
+    } catch (e) {
+      errorMessage = e.toString();
+      debugPrint('loadMentionedPostGrid error: $e');
+    } finally {
+      isLoadingMentioned = false;
+      isLoadingMoreMentioned = false;
+      notifyListeners();
+    }
+  }
+
+  void clearProfile() {
+    myProfile = null;
+    viewedProfile = null;
+
+    myGridPosts = [];
+    viewedGridPosts = [];
+
+    myNextCursor = null;
+    viewedNextCursor = null;
+
+    myHasMoreGrid = true;
+    viewedHasMoreGrid = true;
+
+    errorMessage = null;
     notifyListeners();
   }
 }

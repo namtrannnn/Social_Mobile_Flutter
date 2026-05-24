@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../data/controllers/auth_controller.dart';
 import '../../../../app/routes/route_names.dart';
 import '../../../../core/storage/local_storage_service.dart';
@@ -20,16 +21,16 @@ class _LoginScreenState extends State<LoginScreen> {
   bool rememberMe = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadRememberData();
+  }
+
+  @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRememberData();
   }
 
   Future<void> _loadRememberData() async {
@@ -39,9 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() {
       rememberMe = data['rememberMe'] ?? false;
-
       emailController.text = data['email'] ?? '';
-
       passwordController.text = data['password'] ?? '';
     });
   }
@@ -96,14 +95,33 @@ class _LoginScreenState extends State<LoginScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Color(0xFFE7DFD9),
-                      Color(0xFFD9D0CB),
                       Color(0xFFEDE6E0),
+                      Color(0xFFD9D0CB),
+                      Color(0xFFFFE7DC),
                     ],
                   ),
                 ),
               ),
             ),
+
+            Positioned(
+              top: -80,
+              right: -70,
+              child: _blurCircle(
+                size: 220,
+                color: const Color(0xFFFFB199).withOpacity(0.35),
+              ),
+            ),
+
+            Positioned(
+              bottom: -90,
+              left: -70,
+              child: _blurCircle(
+                size: 240,
+                color: const Color(0xFFF25019).withOpacity(0.18),
+              ),
+            ),
+
             Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
@@ -115,19 +133,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
+                      color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(32),
-                      border: Border.all(color: Colors.white.withOpacity(0.25)),
+                      border: Border.all(color: Colors.white.withOpacity(0.35)),
                     ),
                     child: isWide
                         ? Row(
                             children: [
-                              Expanded(child: _buildFormCard(authController)),
+                              Expanded(child: _buildLoginCard(authController)),
                               const SizedBox(width: 28),
                               Expanded(child: _buildRightPanel()),
                             ],
                           )
-                        : _buildFormCard(authController),
+                        : _buildLoginCard(authController),
                   ),
                 ),
               ),
@@ -138,19 +156,19 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildFormCard(AuthController authController) {
+  Widget _buildLoginCard(AuthController authController) {
     return Center(
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 460),
+        constraints: const BoxConstraints(maxWidth: 470),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         decoration: BoxDecoration(
-          color: const Color(0xFFF3ECE7),
+          color: const Color(0xFFF8F1EC),
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
-              blurRadius: 28,
-              offset: const Offset(0, 12),
+              blurRadius: 30,
+              offset: const Offset(0, 14),
             ),
           ],
         ),
@@ -159,16 +177,45 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'LOGIN',
-                style: TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A1A),
-                  letterSpacing: 0.5,
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF25019).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Icon(
+                  Icons.lock_open_rounded,
+                  size: 34,
+                  color: Color(0xFFF25019),
                 ),
               ),
-              const SizedBox(height: 28),
+
+              const SizedBox(height: 18),
+
+              const Text(
+                'ĐĂNG NHẬP',
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1C1C1C),
+                  letterSpacing: 0.4,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              const Text(
+                'Chào mừng bạn quay trở lại ứng dụng',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  height: 1.4,
+                  color: Color(0xFF666666),
+                ),
+              ),
+
+              const SizedBox(height: 26),
 
               _buildLabel('Email'),
               const SizedBox(height: 8),
@@ -181,22 +228,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return 'Vui lòng nhập email';
                   }
+
                   final email = value.trim();
                   final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
                   if (!emailRegex.hasMatch(email)) {
                     return 'Email không hợp lệ';
                   }
+
                   return null;
                 },
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
 
               _buildLabel('Mật khẩu'),
               const SizedBox(height: 8),
               _buildTextField(
                 controller: passwordController,
-                hint: 'Nhập mật khẩu...',
+                hint: 'Nhập mật khẩu',
                 obscureText: obscurePassword,
                 prefixIcon: Icons.lock_outline_rounded,
                 suffix: IconButton(
@@ -216,14 +266,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return 'Vui lòng nhập mật khẩu';
                   }
+
                   if (value.trim().length < 6) {
                     return 'Mật khẩu tối thiểu 6 ký tự';
                   }
+
                   return null;
                 },
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
               Row(
                 children: [
@@ -233,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       value: rememberMe,
                       activeColor: const Color(0xFFF25019),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                       onChanged: (value) {
                         setState(() {
@@ -242,27 +294,35 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                   ),
+
                   const Text(
                     'Nhớ tài khoản',
-                    style: TextStyle(fontSize: 14, color: Color(0xFF444444)),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF555555),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
+
                   const Spacer(),
+
                   TextButton(
                     onPressed: () {
-                      // TODO: màn quên mật khẩu
+                      // TODO: chuyển qua màn quên mật khẩu nếu bạn đã làm
                     },
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFF25019),
+                      padding: EdgeInsets.zero,
+                    ),
                     child: const Text(
                       'Quên mật khẩu?',
-                      style: TextStyle(
-                        color: Color(0xFF444444),
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
 
               SizedBox(
                 width: double.infinity,
@@ -274,7 +334,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: const Color(
                       0xFFF25019,
-                    ).withOpacity(0.7),
+                    ).withOpacity(0.65),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
@@ -295,7 +355,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           'Đăng nhập',
                           style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                 ),
@@ -303,12 +363,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 22),
 
-              const Text(
-                'Hoặc đăng nhập với',
-                style: TextStyle(fontSize: 14, color: Color(0xFF666666)),
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(color: Colors.black.withOpacity(0.12)),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'Hoặc đăng nhập với',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        color: Color(0xFF777777),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(color: Colors.black.withOpacity(0.12)),
+                  ),
+                ],
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -333,7 +409,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: WrapAlignment.center,
                 children: [
                   const Text(
-                    'Nếu bạn chưa có tài khoản? ',
+                    'Bạn chưa có tài khoản? ',
                     style: TextStyle(fontSize: 14, color: Color(0xFF555555)),
                   ),
                   GestureDetector(
@@ -341,10 +417,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       Navigator.pushNamed(context, RouteNames.register);
                     },
                     child: const Text(
-                      'Đăng ký miễn phí',
+                      'Đăng ký ngay',
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         color: Color(0xFFF25019),
                       ),
                     ),
@@ -360,13 +436,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildRightPanel() {
     return Container(
-      height: 560,
+      height: 620,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFFE2D7), Color(0xFFF5CBB7), Color(0xFFEFB08F)],
+          colors: [Color(0xFFFFE2D7), Color(0xFFF7C7B3), Color(0xFFEFA17C)],
         ),
         boxShadow: [
           BoxShadow(
@@ -377,48 +453,63 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(34),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Spacer(),
+
             Container(
-              width: 88,
-              height: 88,
+              width: 92,
+              height: 92,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.32),
-                borderRadius: BorderRadius.circular(24),
+                color: Colors.white.withOpacity(0.35),
+                borderRadius: BorderRadius.circular(26),
               ),
               child: const Icon(
-                Icons.storefront_rounded,
-                size: 42,
+                Icons.waving_hand_rounded,
+                size: 44,
                 color: Color(0xFF8A3D1D),
               ),
             ),
-            const SizedBox(height: 24),
+
+            const SizedBox(height: 26),
+
             const Text(
               'Chào mừng trở lại',
               style: TextStyle(
-                fontSize: 34,
-                fontWeight: FontWeight.w800,
+                fontSize: 36,
+                height: 1.1,
+                fontWeight: FontWeight.w900,
                 color: Color(0xFF5B2A17),
               ),
             ),
-            const SizedBox(height: 12),
+
+            const SizedBox(height: 14),
+
             const Text(
-              'Đăng nhập để tiếp tục trải nghiệm ứng dụng của bạn với giao diện hiện đại, đồng bộ và thân thiện hơn trên mobile.',
+              'Đăng nhập để tiếp tục kết nối bạn bè, chia sẻ khoảnh khắc và cập nhật những hoạt động mới nhất trong ứng dụng.',
               style: TextStyle(
                 fontSize: 16,
                 height: 1.6,
                 color: Color(0xFF6B3A26),
               ),
             ),
-            const SizedBox(height: 28),
-            _buildFeatureItem(Icons.flash_on_rounded, 'Tốc độ mượt và dễ dùng'),
+
+            const SizedBox(height: 30),
+
+            _buildFeatureItem(
+              Icons.flash_on_rounded,
+              'Trải nghiệm nhanh và mượt',
+            ),
             const SizedBox(height: 14),
-            _buildFeatureItem(Icons.security_rounded, 'Đăng nhập an toàn'),
+            _buildFeatureItem(Icons.security_rounded, 'Tài khoản được bảo vệ'),
             const SizedBox(height: 14),
-            _buildFeatureItem(Icons.phone_iphone_rounded, 'Tối ưu cho mobile'),
+            _buildFeatureItem(
+              Icons.phone_iphone_rounded,
+              'Tối ưu cho thiết bị di động',
+            ),
+
             const Spacer(),
           ],
         ),
@@ -433,10 +524,10 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.35),
+            color: Colors.white.withOpacity(0.36),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, color: const Color(0xFF7A3A21)),
+          child: Icon(icon, color: const Color(0xFF7A3A21), size: 22),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -444,64 +535,12 @@ class _LoginScreenState extends State<LoginScreen> {
             text,
             style: const TextStyle(
               fontSize: 15,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: Color(0xFF5B2A17),
             ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildUserInfo(AuthController authController) {
-    final user = authController.currentUser!;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.75),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: Colors.white,
-            backgroundImage: user.avatar.isNotEmpty
-                ? NetworkImage(user.avatar)
-                : null,
-            child: user.avatar.isEmpty
-                ? const Icon(Icons.person, color: Colors.grey)
-                : null,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user.fullName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  user.email,
-                  style: const TextStyle(fontSize: 13.5, color: Colors.black54),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Role: ${user.role}',
-                  style: const TextStyle(fontSize: 13.5, color: Colors.black87),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -512,7 +551,7 @@ class _LoginScreenState extends State<LoginScreen> {
         text,
         style: const TextStyle(
           fontSize: 15,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: Color(0xFF3C3C3C),
         ),
       ),
@@ -533,13 +572,17 @@ class _LoginScreenState extends State<LoginScreen> {
       validator: validator,
       keyboardType: keyboardType,
       obscureText: obscureText,
-      style: const TextStyle(fontSize: 15.5),
+      style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: const TextStyle(
+          color: Color(0xFF999999),
+          fontWeight: FontWeight.w400,
+        ),
         prefixIcon: Icon(prefixIcon, color: Colors.black54),
         suffixIcon: suffix,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.85),
+        fillColor: Colors.white.withOpacity(0.9),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 18,
@@ -567,6 +610,14 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+  Widget _blurCircle({required double size, required Color color}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
 }
 
 class _SocialButton extends StatelessWidget {
@@ -581,16 +632,23 @@ class _SocialButton extends StatelessWidget {
       message: label,
       child: InkWell(
         onTap: () {},
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         child: Ink(
           width: 58,
           height: 58,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black12),
+            color: Colors.white.withOpacity(0.92),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.black.withOpacity(0.08)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          child: Icon(icon, size: 28, color: const Color(0xFF444444)),
+          child: Icon(icon, size: 30, color: const Color(0xFF444444)),
         ),
       ),
     );

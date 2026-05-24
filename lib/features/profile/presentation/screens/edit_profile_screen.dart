@@ -23,6 +23,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   late bool isPrivate;
   File? selectedAvatar;
+
   @override
   void initState() {
     super.initState();
@@ -67,7 +68,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final token = await SecureStorageService.getValidToken();
     if (token == null) return;
 
-    final success = await context.read<ProfileController>().updateProfile(
+    final controller = context.read<ProfileController>();
+
+    final success = await controller.updateProfile(
       token: token,
       fullName: fullNameController.text,
       username: usernameController.text,
@@ -85,7 +88,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         const SnackBar(content: Text('Cập nhật profile thành công')),
       );
     } else {
-      final error = context.read<ProfileController>().errorMessage;
+      final error = controller.errorMessage;
 
       ScaffoldMessenger.of(
         context,
@@ -97,8 +100,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Consumer<ProfileController>(
       builder: (context, controller, child) {
-        final user = controller.profile?.user ?? widget.profile.user;
-        print('AVATAR LOAD: $user');
+        final user = controller.myProfile?.user ?? widget.profile.user;
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -150,7 +152,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   : null,
                             ),
                           ),
-
                           Positioned(
                             right: 0,
                             bottom: 0,
